@@ -1,10 +1,11 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { UploadCloud, FileText, X, AlertTriangle, Wand2, CheckCircle2 } from 'lucide-react'
 import { api, samples } from '../api'
 import { Card, Spinner } from './ui'
 import { useToast } from './toast'
 
-const OK_EXT = /\.(pdf|docx|doc|odt|rtf|txt)$/i
+// Fallback until /api/config answers; the server's real limits replace it.
+const DEFAULT_CONFIG = { max_batch: 50, max_file_mb: 10, formats: ['pdf', 'docx', 'doc', 'odt', 'rtf', 'txt'], ocr: true }
 
 // Module 2: batch upload of resumes (PDF / DOCX), drag & drop or file picker.
 export default function Uploader({ jobId, onUploaded, compact }) {
@@ -13,8 +14,14 @@ export default function Uploader({ jobId, onUploaded, compact }) {
   const [loadingSamples, setLoadingSamples] = useState(false)
   const [drag, setDrag] = useState(false)
   const [result, setResult] = useState(null)
+  const [config, setConfig] = useState(DEFAULT_CONFIG)
   const input = useRef(null)
   const notify = useToast()
+
+  useEffect(() => { api.config().then(setConfig).catch(() => {}) }, [])
+
+  const okExt = new RegExp(`\\.(${config.formats.join('|')})$`, 'i')
+  const formatList = config.formats.map((f) => f.toUpperCase()).join(', ')
 
   function addFiles(list) {
     const incoming = Array.from(list)
@@ -54,7 +61,8 @@ export default function Uploader({ jobId, onUploaded, compact }) {
     }
   }
 
-  const invalid = files.filter((f) => !OK_EXT.test(f.name))
+  const invalid = files.filter((f) => !okExt.test(f.name))
+  const tooMany = files.length > config.max_batch
 
   return (
     <Card title={compact ? 'Add more resumes' : 'Upload resumes'} icon={<UploadCloud size={18} />}
@@ -82,8 +90,11 @@ export default function Uploader({ jobId, onUploaded, compact }) {
       >
         <UploadCloud size={compact ? 22 : 30} />
         <p><strong>Drag &amp; drop resumes here</strong> or <span className="linkish">browse files</span></p>
-        <p className="muted small">PDF, DOCX, DOC, ODT, RTF or TXT · select many at once (up to 50, max 10 MB each) · scanned PDFs are read with OCR</p>
-        <input ref={input} type="file" multiple accept=".pdf,.docx,.doc,.odt,.rtf,.txt" hidden
+        <p className="muted small">
+          {formatList} · select many at once (up to {config.max_batch}, max {config.max_file_mb} MB each)
+          {config.ocr && ' · scanned PDFs are read with OCR'}
+        </p>
+        <input ref={input} type="file" multiple accept={config.formats.map((f) => `.${f}`).join(',')} hidden
                onChange={(e) => { addFiles(e.target.files); e.target.value = '' }} />
       </div>
 
@@ -95,7 +106,7 @@ export default function Uploader({ jobId, onUploaded, compact }) {
           </div>
           <ul className="file-list">
             {files.map((f) => (
-              <li key={f.name} className={OK_EXT.test(f.name) ? '' : 'bad'}>
+              <li key={f.name} className={okExt.test(f.name) ? '' : 'bad'}>
                 {busy ? <span className="spinner tiny" /> : <FileText size={14} />}
                 <span className="fname">{f.name}</span>
                 <span className="muted small">{(f.size / 1024).toFixed(0)} KB</span>
@@ -103,8 +114,9 @@ export default function Uploader({ jobId, onUploaded, compact }) {
               </li>
             ))}
           </ul>
-          {invalid.length > 0 && <p className="warn small">{invalid.length} file(s) have an unexpected extension; the server will check their content.</p>}
-          <button className="btn btn-primary btn-block" onClick={upload} disabled={busy}>
+          {invalid.length > 0 && <p className="warn small">{invalid.length} file(s) are not in a supported format ({formatList}); the server will check their content.</p>}
+          {tooMany && <p className="warn small">This server accepts up to {config.max_batch} resumes per batch; remove {files.length - config.max_batch}.</p>}
+          <button className="btn btn-primary btn-block" onClick={upload} disabled={busy || tooMany}>
             {busy
               ? <Spinner label={`Reading, matching & ranking ${files.length} resume${files.length > 1 ? 's' : ''}…`} />
               : `Analyse ${files.length} resume${files.length > 1 ? 's' : ''}`}

@@ -35,7 +35,7 @@ function HeroArt() {
       </div>
       <div className="float-card card-upload">
         <p className="fc-title center">Add resumes</p>
-        <p className="fc-sub">PDF, DOCX or scanned, up to 50 at a time</p>
+        <p className="fc-sub">PDF, DOCX or scanned, many at a time</p>
         <span className="fc-btn"><UploadCloud size={13} /> Upload resumes</span>
       </div>
     </div>
@@ -59,7 +59,7 @@ export default function Landing({ jobs, onCreated, onOpenJob }) {
           <div className="hero-cta">
             <button className="btn btn-ink btn-xl" onClick={toStart}>Start with a job description <ArrowRight size={18} /></button>
           </div>
-          <p className="fine">Runs on your own machine. No account, no API keys, sample data included.</p>
+          <p className="fine">No account needed. Sample job descriptions and synthetic resumes are one click away.</p>
         </div>
         <HeroArt />
       </section>

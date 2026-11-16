@@ -136,3 +136,15 @@ def test_frame_policy_is_configurable(monkeypatch):
         h = c.get("/api/health").headers
         assert "x-frame-options" not in h
         assert h["content-security-policy"] == "frame-ancestors 'self' https://huggingface.co"
+
+
+def test_client_config_reflects_installed_tools(monkeypatch):
+    import shutil as sh
+
+    with TestClient(app) as c:
+        cfg = c.get("/api/config").json()
+        assert {"pdf", "docx", "txt"} <= set(cfg["formats"]) and cfg["max_batch"] == get_settings().max_batch
+        real_which = sh.which
+        monkeypatch.setattr(sh, "which", lambda n: None if n in ("soffice", "libreoffice", "tesseract") else real_which(n))
+        cfg = c.get("/api/config").json()
+        assert "rtf" not in cfg["formats"] and cfg["ocr"] is False

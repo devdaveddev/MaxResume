@@ -50,6 +50,7 @@ export const api = {
   exportUrl: (jobId) => `/api/jobs/${jobId}/export.csv`,
   audit: (params = {}) => request(`/audit?${new URLSearchParams(params)}`),
   verifyAudit: () => request('/audit/verify'),
+  config: () => request('/config'),
 }
 
 // Demo helpers: fetch bundled synthetic samples and turn them into File objects,

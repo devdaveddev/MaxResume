@@ -8,6 +8,7 @@ import hashlib
 import io
 import logging
 import re
+import shutil
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import PurePath
@@ -139,6 +140,22 @@ async def ready():
     ok = db_ok and app.state.models_ready
     body = {"ready": ok, "database": db_ok, "models_loaded": app.state.models_ready}
     return JSONResponse(status_code=200 if ok else 503, content=body)
+
+
+@app.get("/api/config")
+async def client_config():
+    """What this deployment actually supports, so the UI never promises more than the server can do.
+    Formats depend on the converters installed (e.g. the 512 MB free image has no LibreOffice)."""
+    office = bool(shutil.which("soffice") or shutil.which("libreoffice"))
+    formats = ["pdf", "docx"]
+    if office or shutil.which("antiword"):
+        formats.append("doc")
+    formats += ["odt", "txt"]  # ODT falls back to reading content.xml natively
+    if office:
+        formats.append("rtf")
+    return {"max_batch": settings.max_batch, "max_file_mb": settings.max_file_mb,
+            "max_pdf_pages": settings.max_pdf_pages, "formats": formats,
+            "ocr": settings.ocr_enabled and shutil.which("tesseract") is not None}
 
 
 @app.get("/api/skills")
