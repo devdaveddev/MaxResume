@@ -1,0 +1,36 @@
+Senior Java Backend Engineer
+Location: Bengaluru (Hybrid)
+
+About Us
+Northwind Labs builds payment infrastructure used by thousands of merchants. We value ownership, clear communication and pragmatic engineering.
+
+Key Responsibilities
+Design, build and maintain scalable microservices using Java and Spring Boot.
+Develop RESTful APIs consumed by web and mobile clients.
+Build event-driven systems using Apache Kafka for real-time payment processing.
+Optimize SQL queries and database schemas in PostgreSQL for high-throughput workloads.
+Deploy and operate services on AWS using Docker and Kubernetes.
+Write unit and integration tests with JUnit and participate in code reviews.
+Mentor junior engineers and collaborate with product managers in an Agile team.
+
+Requirements
+5+ years of professional experience in backend software development.
+Strong proficiency in Java 17 and the Spring Boot ecosystem.
+Hands-on experience with microservices architecture and REST APIs.
+Solid knowledge of SQL and relational databases such as PostgreSQL.
+Experience with Kafka or similar message brokers.
+Experience with Docker, Kubernetes and CI/CD pipelines (Jenkins or GitHub Actions).
+Working knowledge of AWS cloud services.
+Proficiency with Git.
+Bachelor's degree in Computer Science or a related field, or equivalent practical experience.
+Good communication and problem-solving skills.
+
+Nice to Have
+Experience with Redis caching.
+Familiarity with Terraform or other infrastructure-as-code tools.
+Knowledge of GraphQL.
+Exposure to Kotlin.
+Experience with observability tools like Prometheus and Grafana.
+
+What We Offer
+Competitive salary, health insurance and a learning budget.

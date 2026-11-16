@@ -1,0 +1,23 @@
+Job Title: Data Scientist
+
+About the company
+Brightpath Analytics helps retailers forecast demand.
+
+Responsibilities
+Build and deploy machine learning models for demand forecasting and customer segmentation.
+Analyze large datasets with Python, Pandas and SQL to generate business insights.
+Design A/B tests and apply statistical analysis to evaluate product changes.
+Work with data engineers to build reliable ETL data pipelines.
+Communicate findings to non-technical stakeholders with clear dashboards.
+
+Requirements
+3+ years of experience as a Data Scientist or in a similar analytical role.
+Strong Python skills including Pandas, NumPy and scikit-learn.
+Solid understanding of statistics and machine learning.
+Experience writing complex SQL queries.
+Master's degree in Statistics, Computer Science, Mathematics or a related field.
+
+Preferred
+Experience with deep learning frameworks such as PyTorch or TensorFlow.
+Experience with Spark is a plus.
+Familiarity with Tableau or Power BI.
