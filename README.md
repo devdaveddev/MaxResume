@@ -102,6 +102,19 @@ npm run dev                                 # http://localhost:5173 (proxies /ap
 If the API runs on another port: `API_URL=http://localhost:8001 npm run dev`.
 Configuration is via environment variables; see [`backend/.env.example`](backend/.env.example).
 
+### Option C: public deployment (Hugging Face Spaces)
+
+[`deploy/huggingface/`](deploy/huggingface) holds an all-in-one image (the React build is served by the
+FastAPI process on port 7860) and a script that uploads exactly the committed code to a Docker Space:
+
+```bash
+uvx --from huggingface_hub hf auth login                     # once, with a write token
+uv run --with huggingface_hub python deploy/huggingface/deploy.py --space <user>/maxresume
+```
+
+The free CPU tier (2 vCPU, 16 GB RAM) runs everything, OCR and LibreOffice included. Without a
+`MONGO_URL` Space secret, data lives in memory and resets when the Space restarts.
+
 ### Try it
 Click **Senior Java Backend Engineer** under *Try a sample*, then **Extract requirements** →
 **Add sample resumes** → **Analyse**. Click **Try tricky files** to see OCR, two-column parsing and
