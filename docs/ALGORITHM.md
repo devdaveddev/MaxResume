@@ -159,7 +159,7 @@ s_education = 0.75 × level + 0.25 × field
 
 ---
 
-## 5. Worked example — Daniel Okafor vs "Senior Java Backend Engineer"
+## 5. Worked example — Riya Gupta vs "Senior Java Backend Engineer"
 
 **Required skills** (15 items, `Jenkins / GitHub Actions` counted as one):
 

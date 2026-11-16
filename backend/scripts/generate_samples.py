@@ -123,7 +123,7 @@ CANDIDATES = [
                     ("B.S. in Information Technology", "Monterrey Institute of Technology", "2018")],
          certs=["Oracle Certified Professional, Java SE 11 Developer"]),
 
-    dict(file="daniel_okafor.pdf", layout="C", name="Daniel Okafor", email="daniel.okafor@example.com",
+    dict(file="riya_gupta.pdf", layout="C", name="Riya Gupta", email="riya.gupta@example.com",
          phone="+44 555 0193 442", location="London, UK", linkedin=None,
          summary="Backend engineer focused on JVM languages and streaming systems.",
          skills="Kotlin, Java, Spring Boot, PostgreSQL, GCP, Docker, Kubernetes, gRPC, Git",
