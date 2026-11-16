@@ -1,0 +1,21 @@
+# Unrelated third-party project kept in this folder — never commit/push it
+derive/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Tooling / local artifacts
+.playwright-mcp/
+.env
+.DS_Store
+*.log
+
+# Local editor workspace (references ../derive)
+*.code-workspace
