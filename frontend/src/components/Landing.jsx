@@ -10,19 +10,20 @@ const STEPS = [
   { icon: <MessageSquareText size={22} />, title: 'See why', text: 'Open anyone to see matched and missing skills, the evidence, and how the score adds up.' },
 ]
 
-// Decorative product mock-ups for the hero (illustrative, not live data).
-function HeroArt() {
+// Product mock-ups for the hero. The two preview cards are decorative; the upload card is a
+// real entry point (resumes are always scored against a job, so it leads to the JD form first).
+function HeroArt({ onUpload }) {
   return (
-    <div className="hero-art" aria-hidden="true">
-      <div className="glow glow-a" />
-      <div className="glow glow-b" />
-      <div className="float-card card-jd">
+    <div className="hero-art">
+      <div className="glow glow-a" aria-hidden="true" />
+      <div className="glow glow-b" aria-hidden="true" />
+      <div className="float-card card-jd" aria-hidden="true">
         <p className="fc-title">What does this role need?</p>
         {['Java & Spring Boot', 'Kafka or similar', '5+ years backend', "Bachelor's in CS"].map((t, i) => (
           <label key={t} className="fc-option"><span className={`fc-check ${i < 3 ? 'on' : ''}`} />{t}</label>
         ))}
       </div>
-      <div className="float-card card-rank">
+      <div className="float-card card-rank" aria-hidden="true">
         <p className="fc-title">Top matches</p>
         {[['Aarav Mehta', 85], ['Rohan Iyer', 80], ['Lucia Fernandes', 78]].map(([n, s]) => (
           <div key={n} className="fc-row">
@@ -35,15 +36,19 @@ function HeroArt() {
       </div>
       <div className="float-card card-upload">
         <p className="fc-title center">Add resumes</p>
-        <p className="fc-sub">PDF, DOCX or scanned, many at a time</p>
-        <span className="fc-btn"><UploadCloud size={13} /> Upload resumes</span>
+        <p className="fc-sub">Add the job first, then drop PDF, DOCX or scanned resumes</p>
+        <button type="button" className="fc-btn" onClick={onUpload}><UploadCloud size={13} /> Upload resumes</button>
       </div>
     </div>
   )
 }
 
 export default function Landing({ jobs, onCreated, onOpenJob }) {
-  const toStart = () => document.getElementById('start')?.scrollIntoView({ behavior: 'smooth' })
+  // Scroll to the JD form and put the cursor in it: adding the job is always step 1.
+  const toStart = () => {
+    document.getElementById('start')?.scrollIntoView({ behavior: 'smooth' })
+    setTimeout(() => document.querySelector('.job-form textarea')?.focus({ preventScroll: true }), 500)
+  }
 
   return (
     <div className="landing">
@@ -61,7 +66,7 @@ export default function Landing({ jobs, onCreated, onOpenJob }) {
           </div>
           <p className="fine">No account needed. Sample job descriptions and synthetic resumes are one click away.</p>
         </div>
-        <HeroArt />
+        <HeroArt onUpload={toStart} />
       </section>
 
       {/* ---------------- value strip ---------------- */}
@@ -117,7 +122,11 @@ export default function Landing({ jobs, onCreated, onOpenJob }) {
       <section className="start-section" id="start">
         <div className="start-copy">
           <h2 className="section-title">Start with the role</h2>
-          <p className="muted">Paste a job description or pick a sample to see it in action.</p>
+          <ol className="start-steps">
+            <li><strong>Add the job description.</strong> Paste it, upload it, or pick a sample.</li>
+            <li><strong>Upload resumes.</strong> The upload box appears on the next screen, right after the
+              requirements are extracted.</li>
+          </ol>
           {jobs.length > 0 && (
             <div className="recent">
               <h3>Continue where you left off</h3>

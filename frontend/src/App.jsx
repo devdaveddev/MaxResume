@@ -149,7 +149,7 @@ export default function App() {
 
             <div className={`grid-2 ${rows.length ? 'has-results' : ''}`}>
               <Requirements job={job} allSkills={allSkills} onSave={saveRequirements} defaultOpen={rows.length === 0} />
-              <Uploader jobId={job.id} compact={rows.length > 0} onUploaded={() => { loadRows(job.id); refreshJobs() }} />
+              <Uploader jobId={job.id} compact={rows.length > 0} highlight={rows.length === 0} onUploaded={() => { loadRows(job.id); refreshJobs() }} />
             </div>
             <RankingTable jobId={job.id} rows={rows} selectedId={selected} onSelect={setSelected} onDelete={deleteCandidate} />
           </>

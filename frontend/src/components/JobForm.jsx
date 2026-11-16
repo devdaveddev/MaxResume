@@ -37,7 +37,8 @@ export default function JobForm({ onCreated }) {
   }
 
   return (
-    <Card title="Start with the job description" icon={<FileText size={18} />} className="job-form">
+    <Card title="Start with the job description" icon={<FileText size={18} />} className="job-form"
+          actions={<span className="step-note">Step 1 of 2 · next: upload resumes</span>}>
       {sampleJds.length > 0 && (
         <div className="sample-row">
           <Wand2 size={14} /> <span>No JD handy? Try a sample:</span>

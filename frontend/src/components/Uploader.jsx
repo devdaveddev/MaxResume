@@ -12,7 +12,7 @@ const CHUNK = 3
 const DEFAULT_CONFIG = { max_batch: 50, max_file_mb: 10, formats: ['pdf', 'docx', 'doc', 'odt', 'rtf', 'txt'], ocr: true }
 
 // Module 2: batch upload of resumes (PDF / DOCX), drag & drop or file picker.
-export default function Uploader({ jobId, onUploaded, compact }) {
+export default function Uploader({ jobId, onUploaded, compact, highlight }) {
   const [files, setFiles] = useState([])
   const [busy, setBusy] = useState(false)
   const [loadingSamples, setLoadingSamples] = useState(false)
@@ -80,7 +80,8 @@ export default function Uploader({ jobId, onUploaded, compact }) {
   const tooMany = files.length > config.max_batch
 
   return (
-    <Card title={compact ? 'Add more resumes' : 'Upload resumes'} icon={<UploadCloud size={18} />}
+    <Card title={compact ? 'Add more resumes' : 'Step 2 · Upload resumes'} icon={<UploadCloud size={18} />}
+          className={highlight ? 'highlight' : ''}
           actions={!busy && (
             <div className="sample-btns">
               <button className="pill-btn" onClick={() => addSamples('resumes')} disabled={loadingSamples}>

@@ -472,6 +472,16 @@ main.main-landing { max-width: 1360px; padding-top: 0; }
 
 .start-section { display: grid; grid-template-columns: 1fr 1.3fr; gap: 40px; align-items: start; padding: 110px 0 60px; scroll-margin-top: 80px; }
 
+/* ---------- upload discoverability ---------- */
+button.fc-btn { width: 100%; border: none; cursor: pointer; font: inherit; font-size: 13px; font-weight: 600; }
+button.fc-btn:hover { background: var(--ink-hover); }
+.step-note { font-size: 12px; font-weight: 600; color: var(--muted); background: var(--surface-2); padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
+.start-steps { margin: 0 0 20px; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; color: var(--muted); }
+.start-steps strong { color: var(--text); }
+.card.highlight { box-shadow: 0 0 0 3px color-mix(in srgb, var(--glow-a) 70%, transparent), 0 12px 32px rgba(20, 24, 40, .06); animation: ring 2.4s ease-in-out 3; }
+@keyframes ring { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--glow-a) 35%, transparent), 0 12px 32px rgba(20, 24, 40, .06); } }
+@media (prefers-reduced-motion: reduce) { .card.highlight { animation: none; } }
+
 /* ---------- upload progress ---------- */
 .upload-progress { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); }
 .up-head { display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; font-weight: 600; }
