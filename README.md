@@ -12,6 +12,11 @@ Tesseract OCR · MongoDB (with an in-memory fallback) · Docker Compose.
 |---|---|
 | [docs/ALGORITHM.md](docs/ALGORITHM.md) | matching algorithm, how the % is calculated, a worked example |
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | logging, audit trail, ingestion safeguards, configuration, security, deployment, runbook |
+| [docs/DEMO.md](docs/DEMO.md) | end-to-end walkthrough with screenshots from the live site, talking points and likely questions |
+
+**Live demo:** <https://maxresume.onrender.com> (free tier: allow ~1 minute to wake up)
+
+![Ranking dashboard](docs/screenshots/06-ranking-table.png)
 
 ---
 
