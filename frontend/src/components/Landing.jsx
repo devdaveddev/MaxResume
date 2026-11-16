@@ -1,4 +1,5 @@
-import { FileText, UploadCloud, ScanSearch, Trophy, MessageSquareText, Briefcase, ArrowRight, CheckCircle2, MinusCircle, AlertCircle, ShieldCheck, Lock, Sparkles } from 'lucide-react'
+import { useRef } from 'react'
+import { FileText, UploadCloud, Paperclip, X, ScanSearch, Trophy, MessageSquareText, Briefcase, ArrowRight, CheckCircle2, MinusCircle, AlertCircle, ShieldCheck, Lock, Sparkles } from 'lucide-react'
 import JobForm from './JobForm'
 import { Avatar } from './ui'
 
@@ -10,9 +11,13 @@ const STEPS = [
   { icon: <MessageSquareText size={22} />, title: 'See why', text: 'Open anyone to see matched and missing skills, the evidence, and how the score adds up.' },
 ]
 
-// Product mock-ups for the hero. The two preview cards are decorative; the upload card is a
-// real entry point (resumes are always scored against a job, so it leads to the JD form first).
-function HeroArt({ onUpload }) {
+const RESUME_TYPES = '.pdf,.docx,.doc,.odt,.rtf,.txt'
+
+// Product mock-ups for the hero. The two preview cards are decorative; the upload card is real:
+// it opens the file picker, keeps the chosen resumes ready, and they are analysed automatically
+// as soon as the job description is added (every score needs a job to compare against).
+function HeroArt({ onPick, pendingCount }) {
+  const input = useRef(null)
   return (
     <div className="hero-art">
       <div className="glow glow-a" aria-hidden="true" />
@@ -36,14 +41,21 @@ function HeroArt({ onUpload }) {
       </div>
       <div className="float-card card-upload">
         <p className="fc-title center">Add resumes</p>
-        <p className="fc-sub">Add the job first, then drop PDF, DOCX or scanned resumes</p>
-        <button type="button" className="fc-btn" onClick={onUpload}><UploadCloud size={13} /> Upload resumes</button>
+        <p className="fc-sub">
+          {pendingCount ? `${pendingCount} resume${pendingCount > 1 ? 's' : ''} ready to analyse`
+            : 'PDF, Word or scanned. Pick as many as you like.'}
+        </p>
+        <button type="button" className="fc-btn" onClick={() => input.current.click()}>
+          <UploadCloud size={13} /> {pendingCount ? 'Change resumes' : 'Upload resumes'}
+        </button>
+        <input ref={input} type="file" multiple hidden accept={RESUME_TYPES}
+               onChange={(e) => { if (e.target.files.length) onPick(Array.from(e.target.files)); e.target.value = '' }} />
       </div>
     </div>
   )
 }
 
-export default function Landing({ jobs, onCreated, onOpenJob }) {
+export default function Landing({ jobs, onCreated, onOpenJob, pendingResumes, onPickResumes, onClearResumes }) {
   // Scroll to the JD form and put the cursor in it: adding the job is always step 1.
   const toStart = () => {
     document.getElementById('start')?.scrollIntoView({ behavior: 'smooth' })
@@ -66,7 +78,7 @@ export default function Landing({ jobs, onCreated, onOpenJob }) {
           </div>
           <p className="fine">No account needed. Sample job descriptions and synthetic resumes are one click away.</p>
         </div>
-        <HeroArt onUpload={toStart} />
+        <HeroArt pendingCount={pendingResumes.length} onPick={(files) => { onPickResumes(files); toStart() }} />
       </section>
 
       {/* ---------------- value strip ---------------- */}
@@ -108,11 +120,15 @@ export default function Landing({ jobs, onCreated, onOpenJob }) {
             <p className="ec-formula">40%×68 + 20%×100 + 20%×41 + 10%×21 + 10%×100 = 67.5%</p>
           </div>
           <div className="explain-copy">
-            <h3>Every score explained</h3>
+            <h3>Every score, explained</h3>
             <p>
-              No black box. Each match shows the skills found and missing, which experience counted and why,
-              the resume sentences that back it up, and the exact formula behind the percentage. You stay in
-              control: edit the requirements or weights and every candidate is re-scored instantly.
+              You shouldn&apos;t have to trust a number you can&apos;t question. Click on anyone and MaxResume shows its
+              working: the skills it found, the ones that are missing, which jobs it counted as relevant, and
+              the lines from their resume that back it all up.
+            </p>
+            <p>
+              The percentage comes with its formula, so you can check the maths yourself. And if you disagree
+              with a requirement, change it. Every candidate is re-scored on the spot.
             </p>
           </div>
         </div>
@@ -122,11 +138,24 @@ export default function Landing({ jobs, onCreated, onOpenJob }) {
       <section className="start-section" id="start">
         <div className="start-copy">
           <h2 className="section-title">Start with the role</h2>
-          <ol className="start-steps">
+          {pendingResumes.length > 0 && (
+            <div className="pending-resumes" role="status">
+              <Paperclip size={16} />
+              <div>
+                <strong>{pendingResumes.length} resume{pendingResumes.length > 1 ? 's' : ''} ready.</strong>{' '}
+                Add the job description and they&apos;ll be analysed straight away.
+                <div className="muted small pending-names">
+                  {pendingResumes.slice(0, 4).map((f) => f.name).join(', ')}{pendingResumes.length > 4 ? ` +${pendingResumes.length - 4} more` : ''}
+                </div>
+              </div>
+              <button className="icon-btn" onClick={onClearResumes} aria-label="Remove selected resumes"><X size={14} /></button>
+            </div>
+          )}
+          {pendingResumes.length === 0 && <ol className="start-steps">
             <li><strong>Add the job description.</strong> Paste it, upload it, or pick a sample.</li>
             <li><strong>Upload resumes.</strong> The upload box appears on the next screen, right after the
               requirements are extracted.</li>
-          </ol>
+          </ol>}
           {jobs.length > 0 && (
             <div className="recent">
               <h3>Continue where you left off</h3>
@@ -143,7 +172,7 @@ export default function Landing({ jobs, onCreated, onOpenJob }) {
             </div>
           )}
         </div>
-        <JobForm onCreated={onCreated} />
+        <JobForm onCreated={onCreated} pendingCount={pendingResumes.length} />
       </section>
     </div>
   )

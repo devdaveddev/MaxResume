@@ -5,7 +5,7 @@ import { Card, Spinner } from './ui'
 import { useToast } from './toast'
 
 // Module 1: paste or upload a job description.
-export default function JobForm({ onCreated }) {
+export default function JobForm({ onCreated, pendingCount = 0 }) {
   const [title, setTitle] = useState('')
   const [text, setText] = useState('')
   const [file, setFile] = useState(null)
@@ -38,7 +38,7 @@ export default function JobForm({ onCreated }) {
 
   return (
     <Card title="Start with the job description" icon={<FileText size={18} />} className="job-form"
-          actions={<span className="step-note">Step 1 of 2 · next: upload resumes</span>}>
+          actions={<span className="step-note">{pendingCount ? `Step 1 of 2 · ${pendingCount} resume${pendingCount > 1 ? 's' : ''} waiting` : 'Step 1 of 2 · next: upload resumes'}</span>}>
       {sampleJds.length > 0 && (
         <div className="sample-row">
           <Wand2 size={14} /> <span>No JD handy? Try a sample:</span>
@@ -87,7 +87,7 @@ export default function JobForm({ onCreated }) {
         {error && <p className="error">{error}</p>}
 
         <button className="btn btn-primary btn-lg" disabled={busy}>
-          {busy ? <Spinner label="Reading the job description…" /> : <><Sparkles size={16} /> Extract requirements</>}
+          {busy ? <Spinner label="Reading the job description…" /> : <><Sparkles size={16} /> {pendingCount ? `Extract requirements & analyse ${pendingCount} resume${pendingCount > 1 ? 's' : ''}` : 'Extract requirements'}</>}
         </button>
       </form>
     </Card>

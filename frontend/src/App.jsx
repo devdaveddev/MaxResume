@@ -23,6 +23,7 @@ export default function App() {
   const [allSkills, setAllSkills] = useState([])
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showAudit, setShowAudit] = useState(false)
+  const [pendingResumes, setPendingResumes] = useState([]) // picked on the landing page, before the job exists
   const notify = useToast()
 
   const refreshJobs = useCallback(() => api.listJobs().then(setJobs).catch(() => {}), [])
@@ -114,7 +115,8 @@ export default function App() {
         {jobId && <Stepper steps={steps} />}
 
         {!jobId && (
-          <Landing jobs={jobs} onOpenJob={openJob} onCreated={(j) => { refreshJobs(); openJob(j.id) }} />
+          <Landing jobs={jobs} onOpenJob={openJob} onCreated={(j) => { refreshJobs(); openJob(j.id) }}
+                   pendingResumes={pendingResumes} onPickResumes={setPendingResumes} onClearResumes={() => setPendingResumes([])} />
         )}
 
         {jobId && !job && <div className="loading-page"><span className="spinner" /> Loading job…</div>}
@@ -149,7 +151,9 @@ export default function App() {
 
             <div className={`grid-2 ${rows.length ? 'has-results' : ''}`}>
               <Requirements job={job} allSkills={allSkills} onSave={saveRequirements} defaultOpen={rows.length === 0} />
-              <Uploader jobId={job.id} compact={rows.length > 0} highlight={rows.length === 0} onUploaded={() => { loadRows(job.id); refreshJobs() }} />
+              <Uploader jobId={job.id} compact={rows.length > 0} highlight={rows.length === 0 && !pendingResumes.length}
+                        autoFiles={pendingResumes} onAutoConsumed={() => setPendingResumes([])}
+                        onUploaded={() => { loadRows(job.id); refreshJobs() }} />
             </div>
             <RankingTable jobId={job.id} rows={rows} selectedId={selected} onSelect={setSelected} onDelete={deleteCandidate} />
           </>

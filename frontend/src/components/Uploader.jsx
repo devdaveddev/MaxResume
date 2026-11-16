@@ -12,7 +12,7 @@ const CHUNK = 3
 const DEFAULT_CONFIG = { max_batch: 50, max_file_mb: 10, formats: ['pdf', 'docx', 'doc', 'odt', 'rtf', 'txt'], ocr: true }
 
 // Module 2: batch upload of resumes (PDF / DOCX), drag & drop or file picker.
-export default function Uploader({ jobId, onUploaded, compact, highlight }) {
+export default function Uploader({ jobId, onUploaded, compact, highlight, autoFiles, onAutoConsumed }) {
   const [files, setFiles] = useState([])
   const [busy, setBusy] = useState(false)
   const [loadingSamples, setLoadingSamples] = useState(false)
@@ -24,6 +24,16 @@ export default function Uploader({ jobId, onUploaded, compact, highlight }) {
   const notify = useToast()
 
   useEffect(() => { api.config().then(setConfig).catch(() => {}) }, [])
+
+  // Resumes picked on the landing page before the job existed: analyse them right away (once).
+  const autoStarted = useRef(null)
+  useEffect(() => {
+    if (!autoFiles?.length || autoStarted.current === autoFiles) return
+    autoStarted.current = autoFiles
+    setFiles(autoFiles)
+    upload(autoFiles)
+    onAutoConsumed?.()
+  }, [autoFiles]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const okExt = new RegExp(`\\.(${config.formats.join('|')})$`, 'i')
   const formatList = config.formats.map((f) => f.toUpperCase()).join(', ')
@@ -49,8 +59,8 @@ export default function Uploader({ jobId, onUploaded, compact, highlight }) {
     }
   }
 
-  async function upload() {
-    const queue = [...files]
+  async function upload(selected = files) {
+    const queue = [...selected]
     const total = { added: [], errors: [] }
     setBusy(true)
     setResult(null)
@@ -143,7 +153,7 @@ export default function Uploader({ jobId, onUploaded, compact, highlight }) {
           </ul>
           {invalid.length > 0 && <p className="warn small">{invalid.length} file(s) are not in a supported format ({formatList}); the server will check their content.</p>}
           {tooMany && <p className="warn small">This server accepts up to {config.max_batch} resumes per batch; remove {files.length - config.max_batch}.</p>}
-          <button className="btn btn-primary btn-block" onClick={upload} disabled={busy || tooMany}>
+          <button className="btn btn-primary btn-block" onClick={() => upload()} disabled={busy || tooMany}>
             {busy
               ? <Spinner label={`${files.length} waiting…`} />
               : `Analyse ${files.length} resume${files.length > 1 ? 's' : ''}`}

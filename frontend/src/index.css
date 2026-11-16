@@ -431,7 +431,7 @@ main.main-landing { max-width: 1360px; padding-top: 0; }
 .fc-row { display: grid; grid-template-columns: 26px 1fr 80px 40px; gap: 10px; align-items: center; font-size: 13.5px; padding: 6px 0; }
 .fc-bar { height: 7px; background: var(--track); border-radius: 99px; overflow: hidden; }
 .fc-bar span { display: block; height: 100%; background: var(--ink); border-radius: 99px; }
-.card-upload { bottom: 30px; left: 70px; width: 310px; animation: bob 9s ease-in-out infinite; }
+.card-upload { bottom: 30px; left: 70px; width: 310px; }  /* interactive: stays still so it is easy to click */
 .fc-btn { display: flex; justify-content: center; align-items: center; gap: 6px; background: var(--ink); color: var(--surface); font-size: 13px; font-weight: 600; border-radius: 6px; padding: 9px; }
 @keyframes bob { 50% { transform: translateY(-10px); } }
 @media (prefers-reduced-motion: reduce) { .float-card { animation: none; } }
@@ -475,6 +475,13 @@ button.fc-btn:hover { background: var(--ink-hover); }
 .card.highlight { box-shadow: 0 0 0 3px color-mix(in srgb, var(--glow-a) 70%, transparent), 0 12px 32px rgba(20, 24, 40, .06); animation: ring 2.4s ease-in-out 3; }
 @keyframes ring { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--glow-a) 35%, transparent), 0 12px 32px rgba(20, 24, 40, .06); } }
 @media (prefers-reduced-motion: reduce) { .card.highlight { animation: none; } }
+
+.pending-resumes { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; margin-bottom: 18px; border-radius: 12px;
+  background: color-mix(in srgb, var(--glow-a) 22%, var(--surface)); border: 1px solid color-mix(in srgb, var(--glow-a) 60%, transparent); font-size: 14px; }
+.pending-resumes > svg { flex-shrink: 0; margin-top: 3px; }
+.pending-resumes > div { flex: 1; }
+.pending-names { margin-top: 2px; word-break: break-all; }
+.explain-copy p + p { margin-top: 12px; }
 
 /* ---------- upload progress ---------- */
 .upload-progress { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); }
