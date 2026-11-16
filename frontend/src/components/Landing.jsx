@@ -97,7 +97,7 @@ export default function Landing({ jobs, onCreated, onOpenJob }) {
         <p className="panel-kicker">Why MaxResume</p>
         <div className="explain-grid">
           <div className="explain-card">
-            <p className="ec-head"><span className="ec-score">67.5%</span> Daniel Okafor · Good match</p>
+            <p className="ec-head"><span className="ec-score">67.5%</span> Riya Gupta · Good match</p>
             <ul>
               <li className="positive"><CheckCircle2 size={15} /> Has 9 of 15 required skills: Java, Spring Boot, PostgreSQL…</li>
               <li className="neutral"><MinusCircle size={15} /> Kafka not named, but implied by “a real-time event streaming platform…” (half credit)</li>

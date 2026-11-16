@@ -27,15 +27,9 @@
   background: var(--bg);
   font-size: 14px;
   line-height: 1.5;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f1117; --surface: #171a23; --surface-2: #1d212c; --border: #2a2f3d; --text: #e6e8ef; --muted: #9098ad;
-    --primary: #a5b4fc; --primary-soft: #232647; --track: #2a2f3d;
-    --ink: #eceef5; --ink-hover: #ffffff; --glow-a: #1d4f73; --glow-b: #3b2f6b;
-    --good-soft: #12301f; --warn-soft: #33260f; --bad-soft: #3a1717;
-  }
+  /* Light theme only: also keeps native inputs, scrollbars and pickers light
+     when the visitor's operating system is set to dark mode. */
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
