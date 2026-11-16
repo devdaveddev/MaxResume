@@ -137,6 +137,36 @@ _RAW: dict[str, tuple[str, str | None, list[str]]] = {
     # ---------------- Security ----------------
     "OAuth / JWT": ("Security", None, ["oauth", "oauth2", "jwt", "spring security", "openid connect"]),
 
+    # ---------------- Frontend tooling & design ----------------
+    "Figma": ("Design", None, ["figma"]),
+    "Storybook": ("Frontend", None, ["storybook"]),
+    "Accessibility": ("Frontend", None, ["accessibility", "wcag", "a11y"]),
+    "Web Performance": ("Frontend", None, ["web performance", "core web vitals", "lighthouse"]),
+    "Zustand": ("Frontend", None, ["zustand"]),
+    "Webpack / Vite": ("Frontend", None, ["webpack", "vite"]),
+    "Cypress": ("Testing", "e2e-test", ["cypress"]),
+    "Playwright": ("Testing", "e2e-test", ["playwright"]),
+
+    # ---------------- Data platforms ----------------
+    "dbt": ("Data Engineering", None, ["dbt"]),
+    "Snowflake": ("Data Engineering", "warehouse", ["snowflake"]),
+    "BigQuery": ("Data Engineering", "warehouse", ["bigquery"]),
+    "Redshift": ("Data Engineering", "warehouse", ["redshift"]),
+    "Databricks": ("Data Engineering", None, ["databricks"]),
+    "Kafka Streams / Flink": ("Data Engineering", None, ["flink", "kafka streams"]),
+    "Looker": ("Data & AI", "bi", ["looker", "looker studio"]),
+    "Data Visualization": ("Data & AI", None, ["data visualization", "data visualisation", "dashboards", "dashboarding"]),
+
+    # ---------------- Operations & reliability ----------------
+    "Helm": ("DevOps", None, ["helm"]),
+    "ArgoCD": ("DevOps", "gitops", ["argocd", "argo cd", "fluxcd"]),
+    "OpenTelemetry": ("DevOps", "observability", ["opentelemetry", "otel"]),
+    "Datadog": ("DevOps", "observability", ["datadog"]),
+    "Networking": ("Fundamentals", None, ["networking", "tcp/ip", "dns", "load balancing"]),
+    "Incident Management": ("DevOps", None, ["incident management", "incident response", "incident reviews",
+                                            "on call", "on-call", "postmortems", "post-mortems"]),
+    "Celery": ("Backend", None, ["celery"]),
+
     # ---------------- Soft skills ----------------
     "Communication": ("Soft Skills", None, ["communication skills", "communication", "stakeholder management"]),
     "Leadership": ("Soft Skills", None, ["leadership", "mentoring", "mentored", "team lead", "led a team"]),
@@ -193,6 +223,7 @@ IMPLIED_BY: dict[str, set[str]] = {
     "JavaScript": {"TypeScript", "React", "Angular", "Vue.js", "Node.js"},
     "Python": {"Django", "Flask", "FastAPI", "Pandas", "PyTorch", "scikit-learn"},
     "Machine Learning": {"scikit-learn", "Deep Learning", "PyTorch", "TensorFlow"},
+    "Data Visualization": {"Tableau", "Power BI", "Looker"},
 }
 
 
