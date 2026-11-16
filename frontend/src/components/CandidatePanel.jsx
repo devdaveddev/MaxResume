@@ -81,7 +81,7 @@ function ExperienceBars({ exp }) {
       {bar('Total', exp.candidate_years, 'total')}
       {bar('Relevant', exp.relevant_years, 'rel')}
       {bar('Effective', exp.effective_years, 'eff')}
-      <p className="muted small">Effective = relevant years + half of unrelated years. Result: <strong>{exp.status}</strong></p>
+      <p className="muted small">Effective = relevant years + ¼ of unrelated years (capped at half the requirement). Result: <strong>{exp.status}</strong></p>
     </div>
   )
 }

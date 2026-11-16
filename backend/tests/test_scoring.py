@@ -79,7 +79,7 @@ def test_semantic_evidence_for_unnamed_skill():
     assert kafka["how"] == "semantically implied"
 
 
-def test_unrelated_experience_counts_half():
+def test_unrelated_experience_counts_a_quarter_capped_at_half_the_requirement():
     jd = parse_jd(JD_TEXT)
     r = _resume(STRONG)
     r2 = copy.deepcopy(r)
@@ -88,7 +88,13 @@ def test_unrelated_experience_counts_half():
     e1 = score_candidate(jd, r)["experience"]
     e2 = score_candidate(jd, r2)["experience"]
     assert e1["relevant_years"] > 0 and e2["relevant_years"] == 0
-    assert abs(e2["effective_years"] - 0.5 * e2["candidate_years"]) < 0.11
+    expected = min(0.25 * e2["candidate_years"], 0.5 * e2["required_min"])
+    assert abs(e2["effective_years"] - expected) < 0.11
+    # however much unrelated experience someone has, it never meets the requirement on its own
+    r3 = copy.deepcopy(r2)
+    r3["total_years"] = 40.0
+    e3 = score_candidate(jd, r3)["experience"]
+    assert e3["effective_years"] <= 0.5 * e3["required_min"] and e3["score"] <= 0.5
 
 
 def test_reasons_are_generated(samples):

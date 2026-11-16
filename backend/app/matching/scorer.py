@@ -29,7 +29,7 @@ from ..nlp.embeddings import cosine_matrix
 from ..nlp.skills import extract_skills, find_skill_context
 from ..nlp.skills_taxonomy import IMPLIED_BY, semantic_query, siblings
 
-SCORER_VERSION = "2026.11.1"  # bump whenever scoring rules/thresholds change (stored with every score)
+SCORER_VERSION = "2026.11.2"  # bump whenever scoring rules/thresholds change (stored with every score)
 
 DEFAULT_WEIGHTS = {
     "required_skills": 0.40,
@@ -63,7 +63,11 @@ SEM_FLOOR, SEM_CEIL = 0.25, 0.70
 # QA roles score <= 0.44):
 ROLE_TITLE_THRESHOLD = 0.60  # job title close to the JD title
 ROLE_TEXT_THRESHOLD = 0.50   # role description close to the JD requirements
-UNRELATED_EXPERIENCE_FACTOR = 0.5  # unrelated years count half
+# Unrelated work still shows professional maturity, so it counts for something, but never
+# enough to stand in for the role's own experience: a quarter per year, and at most half of
+# the JD's minimum. (A Java developer with 6 years cannot "meet" a 3-year frontend requirement.)
+UNRELATED_EXPERIENCE_FACTOR = 0.25
+UNRELATED_MAX_SHARE = 0.5
 
 
 def _calibrate(sim: float) -> float:
@@ -177,9 +181,12 @@ def _score_experience(jd: dict, resume: dict, jd_required: list[str]) -> dict:
     total_years = float(resume.get("total_years") or 0.0)
     if not roles:  # years only known from a "X years of experience" claim
         relevant_years = total_years
-    effective = relevant_years + UNRELATED_EXPERIENCE_FACTOR * max(0.0, total_years - relevant_years)
-
     min_y, max_y = jd.get("min_years"), jd.get("max_years")
+    unrelated_credit = UNRELATED_EXPERIENCE_FACTOR * max(0.0, total_years - relevant_years)
+    if min_y:
+        unrelated_credit = min(unrelated_credit, UNRELATED_MAX_SHARE * min_y)
+    effective = relevant_years + unrelated_credit
+
     if min_y:
         score = 1.0 if effective >= min_y else effective / min_y
         status = "meets" if effective >= min_y else ("close" if effective >= 0.75 * min_y else "below")
@@ -356,7 +363,8 @@ def build_reasons(jd: dict, r: dict) -> list[dict]:
         req_txt = f"{e['required_min']:g}" + (f"–{e['required_max']:g}" if e["required_max"] else "+") + " years"
         txt = f"{_fmt_years(e['candidate_years'])} total experience, {_fmt_years(e['relevant_years'])} relevant"
         if e["effective_years"] != e["relevant_years"]:
-            txt += f" → {_fmt_years(e['effective_years'])} effective (unrelated years count half)"
+            txt += (f" → {_fmt_years(e['effective_years'])} effective (unrelated years count a quarter, "
+                    f"up to half the requirement)")
         txt += f"; JD asks for {req_txt}."
         kind = {"meets": "positive", "close": "neutral"}.get(e["status"], "negative")
         out.append({"kind": kind, "area": "experience", "text": txt})
@@ -372,7 +380,7 @@ def build_reasons(jd: dict, r: dict) -> list[dict]:
     if unrelated:
         out.append({"kind": "neutral", "area": "experience",
                     "text": f"{len(unrelated)} role(s) look unrelated to this job "
-                            f"(e.g. {unrelated[0]['title']}); counted at half weight."})
+                            f"(e.g. {unrelated[0]['title']}); counted at a quarter weight."})
 
     sem = r["semantic"]
     if sem["score"] is not None:

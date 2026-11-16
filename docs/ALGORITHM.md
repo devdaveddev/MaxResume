@@ -127,11 +127,14 @@ On the sample set every backend role scored ≥ 0.50 on description, while front
 roles scored ≤ 0.44, so the thresholds sit in a clear gap.
 
 ```
-effective_years = relevant_years + 0.5 × (total_years − relevant_years)
-s_experience    = min(1, effective_years / required_min_years)
+unrelated_credit = min(0.25 × (total_years − relevant_years), 0.5 × required_min_years)
+effective_years  = relevant_years + unrelated_credit
+s_experience     = min(1, effective_years / required_min_years)
 ```
 
-Unrelated experience still counts half: it shows professional maturity but not domain fit.
+Unrelated experience shows professional maturity but not domain fit, so it counts a quarter per year and
+can never cover more than half of the requirement on its own. Without the cap, a Java developer with
+6 unrelated years would "meet" a 3-year frontend requirement; with it they reach at most 50% on this component.
 Being above the JD's maximum is flagged ("may be overqualified") but **not** penalised.
 
 ### 4.3 Semantic fit
