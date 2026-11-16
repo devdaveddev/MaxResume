@@ -49,9 +49,13 @@ def _years(lines: list[str]) -> tuple[float | None, float | None]:
     for line in lines:
         for m in YEARS_PATTERN.finditer(line):
             after = line[m.end(): m.end() + 60].lower()
-            before = line[max(0, m.start() - 30): m.start()].lower()
-            if "experience" in after or "experience" in before or "exp" in after:
-                lo = float(m.group("min"))
+            before = line[max(0, m.start() - 40): m.start()].lower()
+            # Requirement lines phrase it many ways ("5+ years of experience", "3-6 years building web
+            # apps", "4+ years in SRE"); skip numbers about the company, warranties or vesting.
+            if re.search(r"founded|in business|\bold\b|\bago\b|warranty|vesting|history|track record", before + after):
+                continue
+            lo = float(m.group("min"))
+            if lo:
                 hi = float(m.group("max")) if m.group("max") else None
                 # prefer the most demanding overall requirement (e.g. "5+ years" over "2 years of Kafka")
                 if best[0] is None or lo > best[0]:
@@ -72,15 +76,25 @@ def parse_jd(text: str, title: str | None = None) -> dict:
         for line in (ln.strip() for ln in body.split("\n")):
             if not line or (key == "header" and (line == detected_title or METADATA_LINE.match(line))):
                 continue  # title / "Location: ..." / "Job type: ..." are not requirements
-            if key == "jd_preferred" or PREFERRED_CUES.search(line):
-                preferred_lines.append(line)
-            else:
-                required_lines.append(line)
-                if key == "jd_responsibilities":
-                    responsibility_lines.append(line)
+            # Classify sentence by sentence: in a one-paragraph JD, "Bachelor's degree preferred"
+            # must not turn every other requirement in the paragraph into a nice-to-have.
+            for sentence in re.split(r"(?<=[.!?])\s+(?=[A-Z])", line):
+                sentence = sentence.strip()
+                if not sentence:
+                    continue
+                if key == "jd_preferred" or PREFERRED_CUES.search(sentence):
+                    preferred_lines.append(sentence)
+                else:
+                    required_lines.append(sentence)
+                    if key == "jd_responsibilities":
+                        responsibility_lines.append(sentence)
 
-    req_counts = extract_skills("\n".join(required_lines))
-    pref_counts = extract_skills("\n".join(preferred_lines))
+    # Degree lines name fields of study ("Statistics, Economics"), not skills.
+    def skill_source(lines: list[str]) -> str:
+        return "\n".join(ln for ln in lines if not (degree_levels(ln) or re.search(r"\bdegree\b", ln, re.I)))
+
+    req_counts = extract_skills(skill_source(required_lines))
+    pref_counts = extract_skills(skill_source(preferred_lines))
     required = [s for s in req_counts]
     preferred = [s for s in pref_counts if s not in req_counts]
 

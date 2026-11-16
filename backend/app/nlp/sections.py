@@ -71,8 +71,12 @@ def split_sections(text: str) -> dict[str, str]:
             if _heading_key(head) and rest.strip():
                 inline = (_heading_key(head), rest.strip())
         if inline:
-            current = inline[0]
-            sections.setdefault(current, []).append(inline[1])
+            sections.setdefault(inline[0], []).append(inline[1])
+            # Resume "Skills: Java, SQL" opens the skills section, but a JD line such as
+            # "Good to have: dbt, Snowflake" labels only itself; the lines after it belong
+            # to the section they were already in.
+            if not inline[0].startswith("jd_"):
+                current = inline[0]
             continue
         key = _heading_key(stripped)
         if key:

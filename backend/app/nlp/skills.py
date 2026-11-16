@@ -12,8 +12,10 @@ from functools import lru_cache
 from .skills_taxonomy import CASE_SENSITIVE_ALIASES, SKILLS
 
 # Characters that can be part of a skill token: "C++", "C#", ".NET", "Node.js", "CI/CD"
-_LEFT = r"(?<![A-Za-z0-9+#./\-])"
-_RIGHT = r"(?![A-Za-z0-9+#/]|\.[A-Za-z0-9])"
+# "/" is a separator ("JavaScript/TypeScript", "REST/GraphQL"); aliases that contain one
+# ("CI/CD", "PL/SQL") still match whole because longer aliases claim their span first.
+_LEFT = r"(?<![A-Za-z0-9+#.\-])"
+_RIGHT = r"(?![A-Za-z0-9+#]|\.[A-Za-z0-9])"
 
 
 @lru_cache(maxsize=1)
