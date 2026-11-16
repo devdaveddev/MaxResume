@@ -102,7 +102,13 @@ npm run dev                                 # http://localhost:5173 (proxies /ap
 If the API runs on another port: `API_URL=http://localhost:8001 npm run dev`.
 Configuration is via environment variables; see [`backend/.env.example`](backend/.env.example).
 
-### Option C: public deployment (Hugging Face Spaces)
+### Option C: free public deployment (Render)
+
+[`render.yaml`](render.yaml) deploys the whole app as one free web service from a lean image that fits
+512 MB (same matching results; `.rtf` unsupported there). Steps and trade-offs:
+[`deploy/render/README.md`](deploy/render/README.md).
+
+### Option D: Hugging Face Spaces (requires a PRO plan for Docker Spaces)
 
 [`deploy/huggingface/`](deploy/huggingface) holds an all-in-one image (the React build is served by the
 FastAPI process on port 7860) and a script that uploads exactly the committed code to a Docker Space:

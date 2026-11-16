@@ -1,0 +1,16 @@
+# Render Blueprint: one free web service running the whole app (UI + API).
+# New -> Blueprint -> connect this repository. See deploy/render/README.md.
+services:
+  - type: web
+    name: maxresume
+    runtime: docker
+    plan: free
+    dockerfilePath: ./deploy/render/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: true            # every push to main redeploys
+    envVars:
+      - key: MONGO_URL          # optional: MongoDB Atlas connection string for persistent data
+        sync: false
+      - key: API_KEYS           # optional: "name:key" pairs to require an API key
+        sync: false
