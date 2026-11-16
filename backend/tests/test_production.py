@@ -126,3 +126,13 @@ def test_filename_sanitisation(raw, safe):
 def test_csv_formula_injection_is_neutralised():
     assert _csv_safe("=HYPERLINK(\"http://x\")").startswith("'=")
     assert _csv_safe("+1 555") == "'+1 555" and _csv_safe("Alice") == "Alice"
+
+
+def test_frame_policy_is_configurable(monkeypatch):
+    with TestClient(app) as c:
+        assert c.get("/api/health").headers["x-frame-options"] == "DENY"
+    monkeypatch.setattr(get_settings(), "frame_ancestors", "https://huggingface.co")
+    with TestClient(app) as c:
+        h = c.get("/api/health").headers
+        assert "x-frame-options" not in h
+        assert h["content-security-policy"] == "frame-ancestors 'self' https://huggingface.co"

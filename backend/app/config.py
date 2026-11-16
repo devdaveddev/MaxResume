@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     # Comma-separated "name:key" pairs, e.g. "alice:s3cret,ats-bot:k3y". Empty = auth disabled (local use).
     api_keys: str = ""
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    # Origins allowed to embed the app in an iframe (e.g. "https://huggingface.co").
+    # Empty = no framing at all (X-Frame-Options: DENY).
+    frame_ancestors: str = ""
 
     # --- NLP
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
@@ -52,6 +55,9 @@ class Settings(BaseSettings):
     ocr_max_pages: int = 6
     ocr_dpi: int = 300
     converter_timeout_s: float = 45  # antiword / LibreOffice for .doc/.rtf/.odt
+
+    # --- single-container mode: serve the built frontend from the API process
+    static_dir: Path | None = None
 
     # --- demo data
     enable_samples: bool = True

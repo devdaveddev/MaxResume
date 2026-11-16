@@ -451,3 +451,12 @@ async def verify_audit():
         log.error("Audit chain verification FAILED", extra={"reason": result.get("reason"),
                                                              "broken_at_seq": result.get("broken_at_seq")})
     return result
+
+
+# --------------------------------------------------------------------------- single-container mode
+# In the all-in-one image (e.g. Hugging Face Spaces) the built React app is served by this process.
+# Mounted last so every /api route above takes precedence.
+if settings.static_dir and settings.static_dir.is_dir():
+    from fastapi.staticfiles import StaticFiles
+
+    app.mount("/", StaticFiles(directory=settings.static_dir, html=True), name="web")
