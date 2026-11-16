@@ -1,0 +1,19 @@
+Frontend Engineer (React)
+Location: Remote
+
+We're a fintech startup looking for a frontend engineer to own our customer dashboard.
+
+What you'll do:
+- Build responsive web apps with React and TypeScript
+- Work closely with designers using Figma to ship pixel-perfect UI
+- Write unit tests with Jest and React Testing Library
+- Improve web performance and accessibility (WCAG 2.1)
+
+What we need:
+- 3-6 years building production web applications
+- Strong JavaScript/TypeScript, HTML and CSS
+- Experience with state management (Redux or Zustand)
+- Familiarity with REST and GraphQL APIs
+- BS in Computer Science or equivalent experience
+
+Bonus: Next.js, Storybook, Cypress end-to-end testing

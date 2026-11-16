@@ -1,0 +1,8 @@
+Data Analyst
+Location: Pune | Full-time
+
+Must have: SQL, Excel, Power BI or Tableau, stakeholder communication.
+Good to have: Python (pandas), dbt, Snowflake.
+
+You will build dashboards, define KPIs with business teams, run cohort and funnel analysis, and automate weekly reporting.
+Minimum 2 years of experience in an analytics role. Graduate degree in Statistics, Economics, Mathematics or a related field.

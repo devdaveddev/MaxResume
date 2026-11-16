@@ -1,0 +1,2 @@
+Site Reliability Engineer
+Join our platform team keeping 200+ microservices healthy. You'll run Kubernetes clusters on AWS, manage infrastructure as code with Terraform, build CI/CD in GitHub Actions, and own observability with Prometheus, Grafana and OpenTelemetry. You'll be on call and lead incident reviews. We expect 4+ years in SRE or DevOps, strong Linux and networking fundamentals, scripting in Python or Go, and experience with Helm and ArgoCD. Bachelor's degree preferred.
