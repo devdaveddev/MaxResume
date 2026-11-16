@@ -23,7 +23,7 @@ All constants live in [`backend/app/matching/scorer.py`](../backend/app/matching
 | Entities | regex (email, phone, LinkedIn/GitHub), layout heuristics + **spaCy NER** fallback for name/location |
 | Work history | date-range detection (`Mar 2019 – Present`, `03/2019 - 06/2022`, `Jan '19 – Feb '22`, `Since March 2022`, `Summer 2019`), title/company recovery from surrounding lines, gaps and overlaps |
 | Parse quality | 10 checks → 0–100 confidence; low-confidence parses are flagged for a human (they are **not** penalised in the score) |
-| Semantic matching | **Sentence-Transformers `all-MiniLM-L6-v2`** (384-d embeddings, cosine similarity) |
+| Semantic matching | **`all-MiniLM-L6-v2`** sentence embeddings (384-d, cosine similarity), run on **ONNX Runtime** from the model's official ONNX export; identical to sentence-transformers on PyTorch (verified by `scripts/compare_engines.py`: 0.00-point score difference on all 28 candidate×JD pairs) at half the memory |
 
 ---
 

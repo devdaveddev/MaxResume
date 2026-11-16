@@ -31,8 +31,8 @@ WORKDIR /home/user/app
 
 COPY --chown=user backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
-# bake the embedding model in: no download at start-up
-RUN .venv/bin/python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
+# bake the embedding model (ONNX export + tokenizer) in: no download at start-up
+RUN .venv/bin/python -c "from huggingface_hub import hf_hub_download as d; [d('sentence-transformers/all-MiniLM-L6-v2', f) for f in ('tokenizer.json', 'onnx/model.onnx')]"
 
 COPY --chown=user backend/app ./app
 COPY --chown=user sample_data ./sample_data

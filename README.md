@@ -5,7 +5,7 @@ resume into a structured profile (with a parse-quality check), scores each candi
 hybrid **skills + experience + semantic-similarity** model, and shows a ranked shortlist where every
 score is explained. Every action is recorded in a tamper-evident audit log.
 
-**Stack:** React 18 (Vite) · Python 3.11+ / FastAPI · Sentence-Transformers (`all-MiniLM-L6-v2`) + spaCy ·
+**Stack:** React 18 (Vite) · Python 3.11+ / FastAPI · `all-MiniLM-L6-v2` sentence embeddings on ONNX Runtime + spaCy ·
 Tesseract OCR · MongoDB (with an in-memory fallback) · Docker Compose.
 
 | Document | What it covers |
@@ -90,7 +90,7 @@ without it the API uses in-memory storage). Optional system tools: `tesseract` (
 ```bash
 # API
 cd backend
-uv sync                                     # deps incl. CPU-only PyTorch and the spaCy model
+uv sync                                     # deps incl. ONNX Runtime and the spaCy model (no PyTorch needed)
 uv run uvicorn app.main:app --port 8000     # first start downloads the embedding model (~90 MB)
 
 # UI (second terminal)
