@@ -472,6 +472,13 @@ main.main-landing { max-width: 1360px; padding-top: 0; }
 
 .start-section { display: grid; grid-template-columns: 1fr 1.3fr; gap: 40px; align-items: start; padding: 110px 0 60px; scroll-margin-top: 80px; }
 
+/* ---------- upload progress ---------- */
+.upload-progress { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); }
+.up-head { display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; font-weight: 600; }
+.up-track { height: 8px; background: var(--track); border-radius: 99px; overflow: hidden; margin: 8px 0 6px; }
+.up-fill { height: 100%; background: var(--ink); border-radius: 99px; transition: width .4s ease; }
+.upload-progress p { margin: 0; }
+
 /* ---------- responsive ---------- */
 @media (max-width: 980px) {
   .grid-2, .grid-2.has-results, .start { grid-template-columns: 1fr; }

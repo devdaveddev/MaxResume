@@ -4,6 +4,10 @@ import { api, samples } from '../api'
 import { Card, Spinner } from './ui'
 import { useToast } from './toast'
 
+// Files are sent in small groups so progress is visible and candidates appear in the
+// ranking while the rest are still being processed (important on slow free-tier CPUs).
+const CHUNK = 3
+
 // Fallback until /api/config answers; the server's real limits replace it.
 const DEFAULT_CONFIG = { max_batch: 50, max_file_mb: 10, formats: ['pdf', 'docx', 'doc', 'odt', 'rtf', 'txt'], ocr: true }
 
@@ -14,6 +18,7 @@ export default function Uploader({ jobId, onUploaded, compact }) {
   const [loadingSamples, setLoadingSamples] = useState(false)
   const [drag, setDrag] = useState(false)
   const [result, setResult] = useState(null)
+  const [progress, setProgress] = useState(null) // { done, total }
   const [config, setConfig] = useState(DEFAULT_CONFIG)
   const input = useRef(null)
   const notify = useToast()
@@ -45,20 +50,30 @@ export default function Uploader({ jobId, onUploaded, compact }) {
   }
 
   async function upload() {
+    const queue = [...files]
+    const total = { added: [], errors: [] }
     setBusy(true)
     setResult(null)
-    try {
-      const res = await api.uploadResumes(jobId, files)
-      setResult(res)
-      setFiles([])
-      onUploaded(res)
-      if (res.added.length) notify(`${res.added.length} candidate${res.added.length > 1 ? 's' : ''} analysed and ranked`)
-      if (res.errors.length) notify(`${res.errors.length} file(s) could not be processed`, 'error')
-    } catch (err) {
-      setResult({ added: [], errors: [{ filename: 'Upload', error: err.message }] })
-    } finally {
-      setBusy(false)
+    setProgress({ done: 0, total: queue.length })
+    for (let i = 0; i < queue.length; i += CHUNK) {
+      const chunk = queue.slice(i, i + CHUNK)
+      try {
+        const res = await api.uploadResumes(jobId, chunk)
+        total.added.push(...res.added)
+        total.errors.push(...res.errors)
+        onUploaded(res) // refresh the ranking with the candidates scored so far
+      } catch (err) {
+        // a failed request only affects its own files; keep going with the rest
+        total.errors.push(...chunk.map((f) => ({ filename: f.name, error: err.message })))
+      }
+      setFiles((prev) => prev.filter((f) => !chunk.includes(f)))
+      setProgress({ done: Math.min(i + CHUNK, queue.length), total: queue.length })
+      setResult({ added: [...total.added], errors: [...total.errors] })
     }
+    setBusy(false)
+    setProgress(null)
+    if (total.added.length) notify(`${total.added.length} candidate${total.added.length > 1 ? 's' : ''} analysed and ranked`)
+    if (total.errors.length) notify(`${total.errors.length} file(s) could not be processed`, 'error')
   }
 
   const invalid = files.filter((f) => !okExt.test(f.name))
@@ -98,6 +113,17 @@ export default function Uploader({ jobId, onUploaded, compact }) {
                onChange={(e) => { addFiles(e.target.files); e.target.value = '' }} />
       </div>
 
+      {progress && (
+        <div className="upload-progress" role="progressbar" aria-valuemin={0} aria-valuemax={progress.total} aria-valuenow={progress.done}>
+          <div className="up-head">
+            <Spinner label={`Analysed ${progress.done} of ${progress.total} resume${progress.total > 1 ? 's' : ''}…`} />
+            <span className="muted small">{Math.round((progress.done / progress.total) * 100)}%</span>
+          </div>
+          <div className="up-track"><div className="up-fill" style={{ width: `${Math.max(4, (progress.done / progress.total) * 100)}%` }} /></div>
+          <p className="muted small">Candidates appear in the ranking below as soon as they are scored.</p>
+        </div>
+      )}
+
       {files.length > 0 && (
         <>
           <div className="file-list-head">
@@ -118,7 +144,7 @@ export default function Uploader({ jobId, onUploaded, compact }) {
           {tooMany && <p className="warn small">This server accepts up to {config.max_batch} resumes per batch; remove {files.length - config.max_batch}.</p>}
           <button className="btn btn-primary btn-block" onClick={upload} disabled={busy || tooMany}>
             {busy
-              ? <Spinner label={`Reading, matching & ranking ${files.length} resume${files.length > 1 ? 's' : ''}…`} />
+              ? <Spinner label={`${files.length} waiting…`} />
               : `Analyse ${files.length} resume${files.length > 1 ? 's' : ''}`}
           </button>
         </>
