@@ -33,6 +33,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from app.ingest.detect import FileRejected  # noqa: E402
 from app.ingest.extractors import extract  # noqa: E402
 from app.nlp.dates import total_months  # noqa: E402
 from app.nlp.resume_parser import parse_resume  # noqa: E402
@@ -121,6 +122,7 @@ def evaluate(truths: list[dict]) -> dict:
     fields: dict[str, list[int]] = defaultdict(lambda: [0, 0])  # field -> [correct, total]
     skill_tp = skill_fn = skill_fp = 0
     failures: list[str] = []
+    skipped: list[str] = []
 
     def check(field: str, ok: bool, label: str, got, want):
         fields[field][1] += 1
@@ -133,7 +135,13 @@ def evaluate(truths: list[dict]) -> dict:
         f: Path = t["file"]
         if not f.exists():
             continue
-        ex = extract(f.name, f.read_bytes())
+        try:
+            ex = extract(f.name, f.read_bytes())
+        except FileRejected as e:
+            if e.code == "unsupported":  # e.g. .rtf on a machine without LibreOffice
+                skipped.append(f"{f.name}: {e}")
+                continue
+            raise
         p = parse_resume(ex.text, f.name, today=TODAY, links=ex.links)
         lab = f.name
 
@@ -191,7 +199,8 @@ def evaluate(truths: list[dict]) -> dict:
     recall = skill_tp / max(1, skill_tp + skill_fn)
     precision = skill_tp / max(1, skill_tp + skill_fp)
     return {
-        "resumes": len([t for t in truths if t["file"].exists()]),
+        "resumes": len([t for t in truths if t["file"].exists()]) - len(skipped),
+        "skipped": skipped,
         "field_checks": total,
         "field_accuracy": round(correct / max(1, total), 4),
         "per_field": per_field,
@@ -211,7 +220,8 @@ def main() -> None:
         print(json.dumps(results, indent=2))
         return
     for g, r in results.items():
-        print(f"\n=== {g}: {r['resumes']} resumes, {r['field_checks']} field checks")
+        print(f"\n=== {g}: {r['resumes']} resumes, {r['field_checks']} field checks"
+              + (f" ({len(r['skipped'])} skipped: format not supported on this machine)" if r["skipped"] else ""))
         print(f"field accuracy {r['field_accuracy']:.1%} | skills recall {r['skills']['recall']:.1%} "
               f"precision {r['skills']['precision']:.1%} F1 {r['skills']['f1']:.1%}")
         if r["failures"] and "held-out" in g:
