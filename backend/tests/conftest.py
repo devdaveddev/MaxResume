@@ -21,4 +21,8 @@ def samples():
         import generate_edge_cases
 
         generate_edge_cases.main()
+    if not (SAMPLES / "heldout" / "nadia_rahman.txt").exists():
+        import generate_heldout
+
+        generate_heldout.main()
     return SAMPLES

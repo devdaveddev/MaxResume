@@ -9,8 +9,9 @@ import eval_parsing  # noqa: E402
 
 
 def test_parsing_accuracy_on_known_resumes(samples):
-    result = eval_parsing.evaluate(eval_parsing.sample_truth() + eval_parsing.edge_truth())
-    assert result["resumes"] >= 21 and result["field_checks"] >= 350
+    result = eval_parsing.evaluate(eval_parsing.sample_truth() + eval_parsing.edge_truth()
+                                   + eval_parsing.heldout_truth("dev") + eval_parsing.heldout_truth("heldout"))
+    assert result["resumes"] >= 28 and result["field_checks"] >= 480
     assert result["field_accuracy"] >= 0.98, result["failures"]
     assert result["skills"]["f1"] >= 0.98, result["failures"]
 

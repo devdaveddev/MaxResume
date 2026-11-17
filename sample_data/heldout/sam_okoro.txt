@@ -1,0 +1,16 @@
+Sam Okoro
+sam.okoro@example.com
+07700 900123
+Manchester, UK
+
+EXPERIENCE
+2021 - present: QA Engineer at Pinewood Games
+Automated test suites with Selenium and Python.
+2018 - 2021: Junior Developer at XYZ Ltd
+Maintained PHP and MySQL web applications.
+
+SKILLS
+Selenium, Python, PHP, MySQL, Jira, Git
+
+EDUCATION
+BSc Computer Science, University of Salford (2018)

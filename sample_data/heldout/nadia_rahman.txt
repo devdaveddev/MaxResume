@@ -1,0 +1,17 @@
+NADIA RAHMAN
+Austin, TX • (512) 555-0199 • nadia.rahman@example.com
+
+SUMMARY
+Analytics consultant with over 7 years of experience turning data into decisions.
+
+EMPLOYMENT
+Senior Consultant @ Deloitte, 2020 – 2024
+Delivered Power BI and Tableau dashboards; wrote SQL and Python for client analytics in Agile teams.
+Business Analyst @ Accenture, 2017 – 2019
+Requirements analysis, Excel models and SQL reporting.
+
+SKILLS
+SQL, Excel, Power BI, Python, Tableau, Agile
+
+EDUCATION
+MBA (Business Analytics), University of Texas at Austin, 2017

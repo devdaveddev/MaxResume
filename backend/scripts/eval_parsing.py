@@ -37,6 +37,8 @@ from app.ingest.extractors import extract  # noqa: E402
 from app.nlp.dates import total_months  # noqa: E402
 from app.nlp.resume_parser import parse_resume  # noqa: E402
 from app.nlp.skills_taxonomy import SKILLS  # noqa: E402
+from generate_heldout import OUT as HELDOUT_DIR  # noqa: E402
+from generate_heldout import TRUTH as HELDOUT_TRUTH  # noqa: E402
 from generate_samples import CANDIDATES  # noqa: E402
 
 TODAY = date.today()
@@ -100,6 +102,15 @@ def edge_truth() -> list[dict]:
          "skills": {"Kubernetes", "Terraform", "Go", "Python", "Spark", "AWS", "Java", "PostgreSQL"}},
         *[{"file": e / n, **jonas} for n in ("header_contact.docx", "legacy.doc", "resume.rtf", "resume.odt")],
     ]
+
+
+def heldout_truth(group: str) -> list[dict]:
+    """Resumes in layouts the parser was not developed against (see generate_heldout.py).
+    group 'dev' found bugs that were then fixed; group 'heldout' was never used for tuning."""
+    return [{"file": HELDOUT_DIR / name, "name": t["name"], "email": t["email"], "phone": t["phone"],
+             "location": t["location"], "linkedin": None, "roles": t["roles"], "education": t["education"],
+             "skills": t["skills"]}
+            for name, t in HELDOUT_TRUTH.items() if t["group"] == group]
 
 
 def _norm(s: str | None) -> str:
@@ -191,9 +202,11 @@ def evaluate(truths: list[dict]) -> dict:
 
 
 def main() -> None:
-    groups = {"samples (14)": sample_truth(), "edge cases (7)": edge_truth()}
+    groups = {"samples (14)": sample_truth(), "edge cases (7)": edge_truth(),
+              "unseen layouts, dev (4): found bugs, now fixed": heldout_truth("dev"),
+              "unseen layouts, held-out (3): first run 92.2%, then '@' fixed": heldout_truth("heldout")}
     results = {g: evaluate(t) for g, t in groups.items()}
-    results["overall"] = evaluate(sample_truth() + edge_truth())
+    results["overall"] = evaluate(sample_truth() + edge_truth() + heldout_truth("dev") + heldout_truth("heldout"))
     if "--json" in sys.argv:
         print(json.dumps(results, indent=2))
         return
@@ -201,6 +214,10 @@ def main() -> None:
         print(f"\n=== {g}: {r['resumes']} resumes, {r['field_checks']} field checks")
         print(f"field accuracy {r['field_accuracy']:.1%} | skills recall {r['skills']['recall']:.1%} "
               f"precision {r['skills']['precision']:.1%} F1 {r['skills']['f1']:.1%}")
+        if r["failures"] and "held-out" in g:
+            print("  held-out failures:")
+            for f in r["failures"]:
+                print("   -", f)
         if g == "overall":
             for k, v in r["per_field"].items():
                 print(f"  {k:14} {v['correct']:3}/{v['total']:<3} {v['accuracy']:.1%}")
