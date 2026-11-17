@@ -91,7 +91,7 @@ Then the tabs:
 ![Activity log](screenshots/13-activity-log.png)
 
 > "Every action is recorded and hash-chained, so tampering is detectable. The code is on GitHub with
-> 56 tests, a field-level parsing-accuracy check, and documentation of the algorithm."
+> 63 tests (run on every push in CI), a field-level parsing-accuracy check, and documentation of the algorithm."
 
 ## Questions you will likely get
 
@@ -100,6 +100,7 @@ Then the tabs:
 | How is the % calculated? | Weighted sum of five parts (40/20/20/10/10); components the JD doesn't specify are dropped and the rest re-normalised. See ALGORITHM.md. |
 | Why not just one embedding similarity? | A single resume↔JD cosine is opaque and unstable; explicit skill coverage is precise and explainable. Embeddings are used where they help: paraphrases and role relevance. |
 | How do you avoid keyword stuffing? | Skills used in work experience score 1.0; skills only listed score 0.85; semantic fit measures what the candidate *did*, not the skills list. |
-| How accurate is parsing? | 100% on 369 field checks across 21 synthetic resumes (`scripts/eval_parsing.py`); it's a regression baseline on known layouts, and low-confidence parses are flagged for a human. |
+| How accurate is parsing? | On resumes in layouts it was never built against, the blind first run scored **92.2%** of fields (all names, contacts, dates, degrees and skills correct; the misses were one `Role @ Company` pattern, since fixed). On all 28 test resumes / 488 field checks it is now 100%. Low-confidence parses are flagged for a human. |
 | Is it Sentence Transformers? | Yes, `all-MiniLM-L6-v2`, run on ONNX Runtime to fit the free host; `scripts/compare_engines.py` shows 0.00-point score difference vs PyTorch. |
+| Does it work for jobs other than Java? | Yes: the repo has Frontend, Data Analyst and SRE job descriptions written in different styles, and tests check the right candidate ranks first for each. |
 | What would you improve? | Calibrate thresholds on labelled recruiter decisions, broaden the skill taxonomy beyond tech, add multilingual support, persistent storage on the live demo. |

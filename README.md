@@ -133,34 +133,49 @@ rejections in action, and **Activity log → Verify integrity** to see the audit
 
 ## Tests
 
+[![CI](https://github.com/devdaveddev/MaxResume/actions/workflows/ci.yml/badge.svg)](https://github.com/devdaveddev/MaxResume/actions/workflows/ci.yml)
+
 ```bash
-cd backend && uv run pytest                  # 54 tests
+cd backend && uv run pytest                  # 63 tests
 uv run python scripts/eval_parsing.py        # field-level parsing accuracy report
 ```
+
+Every push runs the backend tests, lint and accuracy report, plus the frontend lint and build, in GitHub Actions.
 
 | Suite | Covers |
 |---|---|
 | `test_parsing.py` | skill/alias edge cases, date formats, overlap merging, sections, resumes in 3 layouts, JD parsing |
 | `test_ingest.py` | magic-byte detection, zip bomb, oversized/empty/executable/encrypted/corrupt files, two-column PDF, OCR, DOCX headers & hyperlinks, `.doc/.rtf/.odt` parity, tricky dates, parse-quality flags |
-| `test_scoring.py` | score properties, weight re-normalisation, substitute/semantic credit, relevant experience, sample ranking |
-| `test_production.py` | audit chain + tamper detection, audited API actions with diffs, PII redaction, request ids, API-key auth, error shape, filename sanitisation, CSV injection |
+| `test_scoring.py` | score properties, weight re-normalisation, substitute/semantic credit, relevant vs unrelated experience, sample ranking |
+| `test_unseen_jds.py` | JDs in shapes the parser was not built against (bulleted, inline *Must have / Good to have*, one paragraph); the right candidate ranks first for each |
+| `test_production.py` | audit chain + tamper detection, audited API actions with diffs, PII redaction, request ids, API-key auth, error shape, filename sanitisation, CSV injection, framing policy, server config |
 | `test_api.py` | end-to-end batch upload, ranking, rescoring |
-| `test_eval.py` | parsing-accuracy regression gate (fails if accuracy drops below 98%) |
+| `test_eval.py` | parsing-accuracy regression gate (fails below 98%) and a check that the evaluator catches errors |
 
 ### Parsing accuracy
 
-`scripts/eval_parsing.py` compares every parsed field with the ground truth the synthetic resumes were
-generated from: name, email, phone, location, LinkedIn, each role's title, company, start and end,
-total years, degree level, institution and graduation year, plus skill precision/recall.
+`scripts/eval_parsing.py` compares every parsed field with known ground truth: name, email, phone, location,
+LinkedIn, each role's title, company, start and end, total years, degree level, institution and graduation
+year, plus skill precision/recall.
 
 | Set | Resumes | Field checks | Field accuracy | Skills F1 |
 |---|---:|---:|---:|---:|
 | Standard samples (3 layouts, PDF + DOCX) | 14 | 253 | 100% | 100% |
 | Edge cases (two-column, scanned/OCR, DOC/RTF/ODT, tricky dates) | 7 | 116 | 100% | 100% |
+| Unseen layouts, dev set (tables, `NAME — Title`, odd headings, plain text) | 4 | 68 | 100% after fixes | 100% |
+| **Unseen layouts, held-out set: blind first run** | **3** | **51** | **92.2%** | **100%** |
 
-The evaluator is verified to catch planted errors. **Caveat:** these files are synthetic and the parser
-was developed against them, so this is a regression baseline for known layouts, not a measure of
-accuracy on arbitrary real-world resumes. Low-confidence parses are flagged in the UI for that reason.
+How to read this honestly:
+- The first two sets were generated alongside the parser, so they are a regression baseline, not proof of
+  generalisation.
+- The **dev set** was written to find weaknesses: its first run exposed 6 bugs (table headers taken as
+  companies, `NAME — Title` headers, bracketed dates, foreign institution names, local phone formats), which
+  were fixed.
+- The **held-out set** was written afterwards, with ground truth fixed before the first run.
+  **Blind result: 92.2%**, with every name, contact, date, degree and skill correct. The 4 misses were one
+  pattern ("Senior Consultant **@** Deloitte"), since fixed, so this set now also scores 100%.
+- The evaluator is verified to catch planted errors. Low-confidence parses are flagged in the UI so a person
+  checks the original file.
 
 ## API
 
