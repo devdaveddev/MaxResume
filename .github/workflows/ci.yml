@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: System tools for OCR and legacy .doc files
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr antiword
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint (ruff)
+        run: uvx ruff@0.8.4 check app tests scripts --select E,F,W,B,UP,SIM --ignore E501,B008,SIM108,UP007,SIM102
+
+      - name: Tests
+        run: uv run pytest -q
+        env:
+          STORAGE: memory
+
+      - name: Parsing accuracy report
+        run: uv run python scripts/eval_parsing.py
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npx eslint src
+      - run: npm run build
