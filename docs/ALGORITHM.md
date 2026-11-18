@@ -211,7 +211,7 @@ Verdict bands: ≥ 80 Strong · 65–80 Good · 50–65 Partial · < 50 Weak.
 ## 7. Known limitations
 
 * The skills taxonomy is curated (tech-focused); skills outside it are only caught semantically.
-* Scanned/image-only PDFs are rejected (no OCR).
+* Scanned/image-only PDFs are read with Tesseract OCR, page by page (up to `OCR_MAX_PAGES`). OCR output is less reliable than a native text layer, so these resumes get lower parse confidence and a "verify names and numbers" flag.
 * Thresholds were calibrated on a small synthetic set; a production system would tune them on labelled
   recruiter decisions.
 * Multi-column PDF layouts can interleave text; DOCX tables are handled.
