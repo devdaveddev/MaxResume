@@ -24,7 +24,7 @@ Tesseract OCR · MongoDB (with an in-memory fallback) · Docker Compose.
 
 | Module | What you get |
 |---|---|
-| 1. Job description | Paste text or upload a file. Extracts must-have vs nice-to-have skills, `A or B` alternatives, years of experience, degree level and field, and requirement statements. Everything is editable, and saving re-scores all candidates. |
+| 1. Job description | Paste text, or upload / drag & drop a PDF, DOCX or TXT file. Extracts must-have vs nice-to-have skills, `A or B` alternatives, years of experience, degree level and field, and requirement statements. Everything is editable, and saving re-scores all candidates. |
 | 2. Resume upload | Drag & drop up to 50 files per batch (**PDF, DOCX, DOC, ODT, RTF, TXT**), parsed in parallel. Bad, unsafe or duplicate files are rejected with a clear reason, without failing the batch. |
 | 3. AI matching | Exact/alias skill matching, substitute skills (MySQL for PostgreSQL), implied skills (GitLab CI ⇒ CI/CD), **semantic skill inference** (“event streaming platform” ⇒ Kafka), relevant vs unrelated experience, and sentence-level semantic fit. |
 | 4. Ranking dashboard | Sortable/filterable table (candidate, experience, match %, matched skills, gaps), summary stats, low-confidence parse flags, CSV export. |
@@ -52,7 +52,7 @@ Tesseract OCR · MongoDB (with an in-memory fallback) · Docker Compose.
 * Optional API-key auth (the key's name becomes the audit actor), security headers, one error format,
   CSV formula-injection protection, liveness/readiness endpoints, Docker images.
 
-One-click **sample data** (2 JDs, 14 synthetic resumes, and a set of *tricky files*) makes it easy to demo.
+One-click **sample data** (5 JDs, 14 synthetic resumes, and a set of *tricky files*; plus a 1 JD + 5 resume demo set in `sample_data/video_demo/`) makes it easy to demo.
 
 ## Architecture
 
@@ -78,17 +78,44 @@ One-click **sample data** (2 JDs, 14 synthetic resumes, and a set of *tricky fil
 * CPU-bound work runs in worker threads with a concurrency limit and per-file timeout.
 * Every score stores its provenance (scorer version, model, weights, time) so it can be reproduced.
 
+## Matching algorithm & scoring
+
+Full methodology with a worked example: [docs/ALGORITHM.md](docs/ALGORITHM.md).
+
+**Score (0–100)** is a weighted sum of five components, each scored 0–1:
+
+```
+score = Σ (wᵢ / Σ active w) × componentᵢ × 100
+weights: required skills 40 · relevant experience 20 · semantic fit 20 · nice-to-have skills 10 · education 10
+```
+
+If the JD doesn't specify a component (e.g. no degree), it is dropped and the other weights are rescaled.
+
+| Component | How it is calculated |
+|---|---|
+| **Required / nice-to-have skills** | Each JD skill takes its best evidence: **1.0** named and used in a role · **0.85** only listed, or implied (PostgreSQL ⇒ SQL) · **0.5** substitute from the same family (MySQL for PostgreSQL; 0.85 if the JD says "or similar") · **0.5** meaning match: a resume sentence has cosine similarity ≥ 0.62 with the skill's description ("event streaming platform" ⇒ Kafka) · **0** missing. `A or B` counts as one requirement. Component = average credit. |
+| **Relevant experience** | A role is relevant if its title (≥ 0.60) or description (≥ 0.50) is similar to the JD, or it uses ≥ max(2, 25%) of the required skills. Relevant years are the union of those roles' dates. `effective = relevant + min(0.25 × unrelated, 0.5 × min_years)`; component = `min(1, effective / min_years)`. |
+| **Semantic fit** | Each JD requirement sentence is matched to its closest resume sentence (all-MiniLM-L6-v2). Similarity is rescaled `clip((sim − 0.25) / 0.45, 0, 1)` and averaged. |
+| **Education** | Level: meets 1.0, one below 0.5, else 0 (≥ 0.7 with "or equivalent experience" and enough years). Component = `0.75 × level + 0.25 × field match`. |
+
+**Verdict:** Strong ≥ 80 · Good ≥ 65 · Partial ≥ 50 · Weak below 50. **Reasons** are generated from the same
+evidence objects as the score, so the explanation always agrees with the number.
+
+Example: Riya Gupta vs Senior Java Backend Engineer: `40%×0.68 + 20%×1.00 + 20%×0.41 + 10%×0.21 + 10%×1.00 = 67.5%` (Good match).
+
 ## Run it
 
 ### Option A: Docker (everything included)
 
 ```bash
+git clone https://github.com/devdaveddev/MaxResume.git
+cd MaxResume
 docker compose up --build          # http://localhost:8080
 ```
 
 ### Option B: local development
 
-Prerequisites: Python 3.11+ with [uv](https://docs.astral.sh/uv/), Node.js 18+, MongoDB 6+ (optional:
+Clone the repo first (see Option A). Prerequisites: Python 3.11+ with [uv](https://docs.astral.sh/uv/), Node.js 18+, MongoDB 6+ (optional:
 without it the API uses in-memory storage). Optional system tools: `tesseract` (scanned PDFs),
 `libreoffice` / `antiword` (`.doc/.rtf/.odt`). Without them those formats are rejected with a clear message.
 
