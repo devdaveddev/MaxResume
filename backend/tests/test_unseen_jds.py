@@ -34,7 +34,7 @@ def test_frontend_jd_bullets_and_slash_lists():
     p = _jd("frontend_engineer.txt")
     assert {"React", "TypeScript", "JavaScript", "Jest", "Figma", "Accessibility"} <= set(p["required_skills"])
     assert {"Next.js", "Storybook", "Cypress"} <= set(p["preferred_skills"])
-    assert (p["min_years"], p["max_years"]) == (3, 6)        # "3-6 years building production web applications"
+    assert (p["min_years"], p["max_years"]) == (3, 6)
     assert p["education"]["min_level"] == 2
 
 
@@ -42,17 +42,16 @@ def test_inline_headings_label_only_their_own_line():
     p = _jd("data_analyst.txt")
     assert {"SQL", "Excel", "Power BI", "Tableau"} <= set(p["required_skills"])
     assert {"Python", "dbt", "Snowflake"} <= set(p["preferred_skills"])
-    assert "Statistics" not in p["required_skills"] + p["preferred_skills"]   # degree field, not a skill
+    assert "Statistics" not in p["required_skills"] + p["preferred_skills"]
     assert p["min_years"] == 2 and p["education"]["min_level"] == 2
-    assert any("dashboards" in s for s in p["requirements"])  # responsibilities stay requirements
+    assert any("dashboards" in s for s in p["requirements"])
 
 
 def test_one_paragraph_jd_is_classified_sentence_by_sentence():
     p = _jd("site_reliability_engineer.txt")
-    # "Bachelor's degree preferred." must not demote every requirement in the paragraph
     assert {"Kubernetes", "Terraform", "Helm", "ArgoCD", "Linux"} <= set(p["required_skills"])
     assert p["min_years"] == 4
-    assert p["education"]["min_level"] == 0                  # the degree is only preferred
+    assert p["education"]["min_level"] == 0
 
 
 @pytest.mark.parametrize("jd,winner", [
@@ -68,6 +67,6 @@ def test_right_candidate_ranks_first(profiles, jd, winner):
 
 def test_unrelated_experience_cannot_meet_the_requirement(profiles):
     p = _jd("frontend_engineer.txt")
-    java_dev = next(r for r in profiles if r["name"] == "Sofia Ramirez")   # 5.9 years, none in frontend
+    java_dev = next(r for r in profiles if r["name"] == "Sofia Ramirez")
     e = score_candidate(p, java_dev)["experience"]
     assert e["relevant_years"] == 0 and e["score"] <= 0.5

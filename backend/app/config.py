@@ -19,47 +19,36 @@ ROOT = Path(__file__).resolve().parents[2]
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    # --- runtime
     env: Literal["development", "test", "production"] = "development"
     app_version: str = "1.1.0"
 
-    # --- logging
     log_level: str = "INFO"
-    log_json: bool | None = None  # default: JSON in production, readable text otherwise
+    log_json: bool | None = None
 
-    # --- storage
     storage: Literal["auto", "mongodb", "memory"] = "auto"
     mongo_url: str = "mongodb://localhost:27017"
     mongo_db: str = "maxresume"
 
-    # --- security
-    # Comma-separated "name:key" pairs, e.g. "alice:s3cret,ats-bot:k3y". Empty = auth disabled (local use).
     api_keys: str = ""
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
-    # Origins allowed to embed the app in an iframe (e.g. "https://huggingface.co").
-    # Empty = no framing at all (X-Frame-Options: DENY).
     frame_ancestors: str = ""
 
-    # --- NLP
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
-    default_phone_region: str = "US"  # used to interpret phone numbers written without a country code
+    default_phone_region: str = "US"
 
-    # --- ingestion limits
     max_file_mb: float = 10
     max_batch: int = 50
-    max_pdf_pages: int = 15          # longer documents are truncated (with a warning)
-    max_unzipped_mb: float = 60      # DOCX/ODT zip-bomb guard
-    parse_timeout_s: float = 90      # per file
+    max_pdf_pages: int = 15
+    max_unzipped_mb: float = 60
+    parse_timeout_s: float = 90
     parse_workers: int = Field(default=4, ge=1, le=16)
     ocr_enabled: bool = True
     ocr_max_pages: int = 6
     ocr_dpi: int = 300
-    converter_timeout_s: float = 45  # antiword / LibreOffice for .doc/.rtf/.odt
+    converter_timeout_s: float = 45
 
-    # --- single-container mode: serve the built frontend from the API process
     static_dir: Path | None = None
 
-    # --- demo data
     enable_samples: bool = True
     samples_dir: Path = ROOT / "sample_data"
 

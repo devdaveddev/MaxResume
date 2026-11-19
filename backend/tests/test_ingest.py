@@ -25,7 +25,6 @@ def _parse(samples, name):
     return ex, profile, assess(profile, ex.meta())
 
 
-# ---------------------------------------------------------------- detection & safety
 def test_type_is_sniffed_from_content_not_extension(samples):
     data = (samples / "resumes" / "aarav_mehta.pdf").read_bytes()
     kind, warnings = sniff(data, "resume.docx")
@@ -52,7 +51,7 @@ def test_executables_and_empty_files_rejected():
 def test_zip_bomb_rejected():
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
-        z.writestr("word/document.xml", b"0" * (70 * 1024 * 1024))  # 70 MB of zeros compresses to ~70 KB
+        z.writestr("word/document.xml", b"0" * (70 * 1024 * 1024))
     with pytest.raises(FileRejected) as e:
         sniff(buf.getvalue(), "cv.docx")
     assert e.value.code == "zip_bomb"
@@ -72,14 +71,13 @@ def test_normalisation():
     assert "Development firm" in t and "Line two" in t and "bullet" in t and "•" not in t
 
 
-# ---------------------------------------------------------------- hard layouts
 def test_two_column_pdf_is_read_column_by_column(samples):
     ex, p, q = _parse(samples, "two_column.pdf")
     assert ex.multi_column_pages == [1]
     assert p["name"] == "Amara Okonkwo"
     assert [r["company"] for r in p["experience"]] == ["Ledgerline", "Quayside Tech"]
     assert {"Java", "Kafka", "Kubernetes"} <= set(p["technical_skills"])
-    assert p["linkedin"] == "https://www.linkedin.com/in/amara-okonkwo-demo"  # from the embedded link
+    assert p["linkedin"] == "https://www.linkedin.com/in/amara-okonkwo-demo"
     assert q["level"] == "high"
 
 
@@ -116,7 +114,7 @@ def test_tricky_dates_overlaps_and_gaps(samples):
     assert dates["Since March 2022"] == ("2022-03-01", "2026-11-01")
     assert dates["Jan '19 – Feb '22"] == ("2019-01-01", "2022-02-01")
     assert dates["06/2015 to 08/2017"] == ("2015-06-01", "2017-08-01")
-    assert p["overlap_months"] == 24          # freelance role overlapped, not double counted
+    assert p["overlap_months"] == 24
     assert p["total_years"] == 10.2
     assert p["employment_gaps"][0]["months"] >= 12
     assert p["education"][0]["gpa"] == "3.8/4.0"

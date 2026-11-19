@@ -50,14 +50,11 @@ def _years(lines: list[str]) -> tuple[float | None, float | None]:
         for m in YEARS_PATTERN.finditer(line):
             after = line[m.end(): m.end() + 60].lower()
             before = line[max(0, m.start() - 40): m.start()].lower()
-            # Requirement lines phrase it many ways ("5+ years of experience", "3-6 years building web
-            # apps", "4+ years in SRE"); skip numbers about the company, warranties or vesting.
             if re.search(r"founded|in business|\bold\b|\bago\b|warranty|vesting|history|track record", before + after):
                 continue
             lo = float(m.group("min"))
             if lo:
                 hi = float(m.group("max")) if m.group("max") else None
-                # prefer the most demanding overall requirement (e.g. "5+ years" over "2 years of Kafka")
                 if best[0] is None or lo > best[0]:
                     best = (lo, hi)
     return best
@@ -72,12 +69,10 @@ def parse_jd(text: str, title: str | None = None) -> dict:
     detected_title = _detect_title(text)
     for key, body in sections.items():
         if key == "jd_about" or key in {"interests", "languages"}:
-            continue  # company blurb / benefits: no candidate requirements in here
+            continue
         for line in (ln.strip() for ln in body.split("\n")):
             if not line or (key == "header" and (line == detected_title or METADATA_LINE.match(line))):
-                continue  # title / "Location: ..." / "Job type: ..." are not requirements
-            # Classify sentence by sentence: in a one-paragraph JD, "Bachelor's degree preferred"
-            # must not turn every other requirement in the paragraph into a nice-to-have.
+                continue
             for sentence in re.split(r"(?<=[.!?])\s+(?=[A-Z])", line):
                 sentence = sentence.strip()
                 if not sentence:
@@ -89,7 +84,6 @@ def parse_jd(text: str, title: str | None = None) -> dict:
                     if key == "jd_responsibilities":
                         responsibility_lines.append(sentence)
 
-    # Degree lines name fields of study ("Statistics, Economics"), not skills.
     def skill_source(lines: list[str]) -> str:
         return "\n".join(ln for ln in lines if not (degree_levels(ln) or re.search(r"\bdegree\b", ln, re.I)))
 
@@ -98,19 +92,15 @@ def parse_jd(text: str, title: str | None = None) -> dict:
     required = [s for s in req_counts]
     preferred = [s for s in pref_counts if s not in req_counts]
 
-    # Soft skills are kept separately; they get a small weight in scoring.
     soft = [s for s in required + preferred if category_of(s) == SOFT_SKILL_CATEGORY]
     required = [s for s in required if s not in soft]
     preferred = [s for s in preferred if s not in soft]
 
-    # "Jenkins or GitHub Actions" -> one requirement satisfied by either skill
     groups, or_similar = extract_alternatives("\n".join(required_lines + preferred_lines))
     alternatives = [g for g in groups if set(g) <= set(required) or set(g) <= set(preferred)]
 
     min_years, max_years = _years(required_lines + preferred_lines)
 
-    # Education: lowest degree level mentioned in the requirements is the bar
-    # ("Bachelor's or Master's in CS" -> Bachelor's is enough).
     edu_lines = [ln for ln in required_lines if degree_levels(ln) or re.search(r"\bdegree\b", ln, re.I)]
     levels = [lvl for ln in edu_lines for lvl in degree_levels(ln)]
     min_level = min(levels) if levels else (2 if edu_lines else 0)
@@ -118,13 +108,9 @@ def parse_jd(text: str, title: str | None = None) -> dict:
     related_ok = any(re.search(r"related field|related discipline|equivalent", ln, re.I) for ln in edu_lines)
     accepted = set(fields)
     if related_ok and set(fields) & RELATED_TECH_FIELDS:
-        accepted |= RELATED_TECH_FIELDS  # "CS or a related field" accepts other technical degrees
+        accepted |= RELATED_TECH_FIELDS
     equivalent_ok = any(re.search(r"equivalent (practical |work )?experience", ln, re.I) for ln in edu_lines)
 
-    # Requirement statements for semantic matching (full sentences carry
-    # context that bare skill names do not, e.g. "design high-throughput APIs").
-    # Years and degree lines are scored by their own components, so they are
-    # excluded here to avoid counting the same requirement twice.
     statements = [ln for ln in dict.fromkeys(responsibility_lines + required_lines)
                   if len(ln.split()) >= 4 and ln not in edu_lines and not YEARS_PATTERN.search(ln)]
 

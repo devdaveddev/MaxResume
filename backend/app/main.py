@@ -48,7 +48,6 @@ async def lifespan(app: FastAPI):
     app.state.parse_slots = asyncio.Semaphore(settings.parse_workers)
     log.info("Starting MaxResume", extra={"version": settings.app_version, "env": settings.env,
                                           "storage": app.state.store.kind, "auth": bool(settings.api_key_map)})
-    # Load the embedding model + spaCy in the background so the first upload is fast.
     asyncio.get_running_loop().run_in_executor(None, _warm_up, app)
     yield
     log.info("Shutting down")
@@ -81,8 +80,6 @@ def audit() -> AuditLog:
     return app.state.audit
 
 
-# --------------------------------------------------------------------------- errors
-# One error shape everywhere: {"detail": msg, "error": {"code", "message", "request_id"}}
 
 def _error(status: int, code: str, message: str, extra: dict | None = None) -> JSONResponse:
     body = {"detail": message, "error": {"code": code, "message": message, "request_id": request_id_var.get()}}
@@ -124,7 +121,6 @@ def _safe_filename(name: str | None) -> str:
     return base[:150]
 
 
-# --------------------------------------------------------------------------- meta
 
 @app.get("/api/health")
 async def health():
@@ -150,7 +146,7 @@ async def client_config():
     formats = ["pdf", "docx"]
     if office or shutil.which("antiword"):
         formats.append("doc")
-    formats += ["odt", "txt"]  # ODT falls back to reading content.xml natively
+    formats += ["odt", "txt"]
     if office:
         formats.append("rtf")
     return {"max_batch": settings.max_batch, "max_file_mb": settings.max_file_mb,
@@ -163,8 +159,6 @@ async def skills():
     return [{"name": k, "category": v["category"]} for k, v in sorted(SKILLS.items())]
 
 
-# --------------------------------------------------------------------------- demo samples
-# Synthetic sample data so a reviewer can try the app in one click (disable with ENABLE_SAMPLES=false).
 
 SAMPLE_GROUPS = {"resumes", "edge_cases"}
 
@@ -190,12 +184,11 @@ async def sample_file(group: str, name: str):
         raise HTTPException(404, "Sample not found")
     base = (settings.samples_dir / group).resolve()
     path = (base / name).resolve()
-    if path.parent != base or not path.is_file():  # no path traversal
+    if path.parent != base or not path.is_file():
         raise HTTPException(404, "Sample not found")
     return FileResponse(path)
 
 
-# --------------------------------------------------------------------------- jobs
 
 @app.post("/api/jobs", status_code=201)
 async def create_job(text: str | None = Form(None, max_length=MAX_JD_CHARS), title: str | None = Form(None, max_length=200),
@@ -297,15 +290,14 @@ async def delete_job(job_id: str):
     return Response(status_code=204)
 
 
-# --------------------------------------------------------------------------- resumes
 
 async def _process_one(job: dict, f: UploadFile) -> dict:
     """Read, validate, extract, parse and score one upload. Never raises: returns ok/error."""
     name = _safe_filename(f.filename)
-    data = await f.read(settings.max_file_bytes + 1)  # bounded read: never buffer more than the limit
+    data = await f.read(settings.max_file_bytes + 1)
     sha = hashlib.sha256(data).hexdigest()
     try:
-        async with app.state.parse_slots:  # bound concurrent CPU work
+        async with app.state.parse_slots:
             cand = await asyncio.wait_for(run_in_threadpool(service.process_resume, job, name, data),
                                           timeout=settings.parse_timeout_s)
         return {"ok": True, "name": name, "data": data, "cand": cand}
@@ -393,7 +385,7 @@ async def export_csv(job_id: str):
     job = await _job_or_404(job_id)
     rows = await list_candidates(job_id)
     buf = io.StringIO()
-    buf.write("\ufeff")  # UTF-8 byte-order mark: Excel otherwise mis-reads non-ASCII names and skills
+    buf.write("\ufeff")
     w = csv.writer(buf)
     w.writerow(["Rank", "Candidate", "Email", "Experience (yrs)", "Relevant (yrs)", "Match %", "Verdict",
                 "Matched skills", "Missing skills", "Parse confidence", "File"])
@@ -408,7 +400,6 @@ async def export_csv(job_id: str):
                              headers={"Content-Disposition": f'attachment; filename="{fname}_ranking.csv"'})
 
 
-# --------------------------------------------------------------------------- candidates
 
 @app.get("/api/candidates/{cand_id}")
 async def get_candidate(cand_id: str):
@@ -419,7 +410,6 @@ async def get_candidate(cand_id: str):
     out = service.public_candidate(c)
     out["job"] = {"id": job["_id"], "title": job["title"], "parsed": job["parsed"],
                   "weights": job.get("weights", DEFAULT_WEIGHTS)}
-    # access to personal data is audited
     await audit().record("candidate.viewed", target_type="candidate", target_id=cand_id, job_id=c["job_id"])
     return out
 
@@ -450,7 +440,6 @@ async def delete_candidate(cand_id: str):
     return Response(status_code=204)
 
 
-# --------------------------------------------------------------------------- audit
 
 @app.get("/api/audit")
 async def list_audit(job_id: str | None = None, action: str | None = None, actor: str | None = None,
@@ -471,9 +460,6 @@ async def verify_audit():
     return result
 
 
-# --------------------------------------------------------------------------- single-container mode
-# In the all-in-one image (e.g. Hugging Face Spaces) the built React app is served by this process.
-# Mounted last so every /api route above takes precedence.
 if settings.static_dir and settings.static_dir.is_dir():
     from fastapi.staticfiles import StaticFiles
 

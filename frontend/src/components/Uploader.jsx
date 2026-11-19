@@ -4,28 +4,27 @@ import { api, samples } from '../api'
 import { Card, Spinner } from './ui'
 import { useToast } from './toast'
 
-// Files are sent in small groups so progress is visible and candidates appear in the
-// ranking while the rest are still being processed (important on slow free-tier CPUs).
+
+
 const CHUNK = 3
 
-// Fallback until /api/config answers; the server's real limits replace it.
+
 const DEFAULT_CONFIG = { max_batch: 50, max_file_mb: 10, formats: ['pdf', 'docx', 'doc', 'odt', 'rtf', 'txt'], ocr: true }
 
-// Module 2: batch upload of resumes (PDF / DOCX), drag & drop or file picker.
 export default function Uploader({ jobId, onUploaded, compact, highlight, autoFiles, onAutoConsumed }) {
   const [files, setFiles] = useState([])
   const [busy, setBusy] = useState(false)
   const [loadingSamples, setLoadingSamples] = useState(false)
   const [drag, setDrag] = useState(false)
   const [result, setResult] = useState(null)
-  const [progress, setProgress] = useState(null) // { done, total }
+  const [progress, setProgress] = useState(null)
   const [config, setConfig] = useState(DEFAULT_CONFIG)
   const input = useRef(null)
   const notify = useToast()
 
   useEffect(() => { api.config().then(setConfig).catch(() => {}) }, [])
 
-  // Resumes picked on the landing page before the job existed: analyse them right away (once).
+
   const autoStarted = useRef(null)
   useEffect(() => {
     if (!autoFiles?.length || autoStarted.current === autoFiles) return
@@ -33,7 +32,7 @@ export default function Uploader({ jobId, onUploaded, compact, highlight, autoFi
     setFiles(autoFiles)
     upload(autoFiles)
     onAutoConsumed?.()
-  }, [autoFiles]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [autoFiles])
 
   const okExt = new RegExp(`\\.(${config.formats.join('|')})$`, 'i')
   const formatList = config.formats.map((f) => f.toUpperCase()).join(', ')
@@ -71,9 +70,9 @@ export default function Uploader({ jobId, onUploaded, compact, highlight, autoFi
         const res = await api.uploadResumes(jobId, chunk)
         total.added.push(...res.added)
         total.errors.push(...res.errors)
-        onUploaded(res) // refresh the ranking with the candidates scored so far
+        onUploaded(res)
       } catch (err) {
-        // a failed request only affects its own files; keep going with the rest
+
         total.errors.push(...chunk.map((f) => ({ filename: f.name, error: err.message })))
       }
       setFiles((prev) => prev.filter((f) => !chunk.includes(f)))

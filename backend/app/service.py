@@ -24,8 +24,6 @@ def new_id() -> str:
 
 
 def build_job(text: str, title: str | None) -> dict:
-    # Pasted text gets the same cleanup as uploaded files: browsers submit
-    # textareas with CRLF line endings, and pasted JDs often contain bullet glyphs.
     text = normalize_text(text)
     parsed = parse_jd(text, title)
     return {"_id": new_id(), "title": parsed["title"], "text": text, "parsed": parsed,
@@ -40,7 +38,6 @@ def apply_job_edits(job: dict, edits: dict) -> dict:
     for key in ("required_skills", "preferred_skills"):
         if edits.get(key) is not None:
             p[key] = list(dict.fromkeys(s.strip() for s in edits[key] if s.strip()))
-    # a skill can't be both required and preferred
     p["preferred_skills"] = [s for s in p["preferred_skills"] if s not in p["required_skills"]]
     p["alternatives"] = [g for g in p.get("alternatives", [])
                          if set(g) <= set(p["required_skills"]) or set(g) <= set(p["preferred_skills"])]

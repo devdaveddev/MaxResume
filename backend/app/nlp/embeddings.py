@@ -30,7 +30,7 @@ import numpy as np
 
 MODEL_NAME = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 ENGINE = os.getenv("EMBEDDING_ENGINE", "onnx").lower()
-MAX_TOKENS = 256  # all-MiniLM-L6-v2's max_seq_length (sentence_bert_config.json)
+MAX_TOKENS = 256
 DIM = 384
 _CACHE_SIZE = 20_000
 _BATCH = 32
@@ -66,11 +66,11 @@ class OnnxEncoder:
             feed = {"input_ids": ids, "attention_mask": mask}
             if "token_type_ids" in self.input_names:
                 feed["token_type_ids"] = np.zeros_like(ids)
-            tokens = self.session.run(None, feed)[0]                      # (batch, seq, 384)
+            tokens = self.session.run(None, feed)[0]
             m = mask[..., None].astype(np.float32)
-            pooled = (tokens * m).sum(axis=1) / np.clip(m.sum(axis=1), 1e-9, None)  # mean pooling
+            pooled = (tokens * m).sum(axis=1) / np.clip(m.sum(axis=1), 1e-9, None)
             norms = np.linalg.norm(pooled, axis=1, keepdims=True)
-            out.append(pooled / np.clip(norms, 1e-12, None))             # L2 normalise
+            out.append(pooled / np.clip(norms, 1e-12, None))
         return np.vstack(out).astype(np.float32)
 
 

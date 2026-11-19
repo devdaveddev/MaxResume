@@ -10,7 +10,7 @@ import AuditPanel from './components/AuditPanel'
 import { Stepper, StatCard, scoreColor } from './components/ui'
 import { useToast } from './components/toast'
 
-// The current job id lives in the URL hash (#/job/<id>) so a refresh keeps your place.
+
 const jobIdFromHash = () => (window.location.hash.match(/^#\/job\/(\w+)/) || [])[1] || null
 
 function scrollToStart() {
@@ -30,7 +30,7 @@ export default function App() {
   const [allSkills, setAllSkills] = useState([])
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showAudit, setShowAudit] = useState(false)
-  const [pendingResumes, setPendingResumes] = useState([]) // picked on the landing page, before the job exists
+  const [pendingResumes, setPendingResumes] = useState([])
   const notify = useToast()
 
   const refreshJobs = useCallback(() => api.listJobs().then(setJobs).catch(() => {}), [])
@@ -59,7 +59,7 @@ export default function App() {
 
   const openJob = (id) => { window.location.hash = id ? `#/job/${id}` : '' }
 
-  // "New job" in the navbar: go to the job-description form from any page and focus it.
+
   const goToStart = () => {
     if (window.location.hash === '#start') scrollToStart()
     else window.location.hash = '#start'

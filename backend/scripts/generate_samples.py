@@ -88,8 +88,6 @@ Experience with Spark is a plus.
 Familiarity with Tableau or Power BI.
 """
 
-# --------------------------------------------------------------------------- candidates
-# Each role: (title, company, city, start, end, [bullets]); dates are strings in "Mon YYYY" form.
 CANDIDATES = [
     dict(file="aarav_mehta.pdf", layout="A", name="Aarav Mehta", email="aarav.mehta@example.com",
          phone="+91 98765 55501", location="Bengaluru, India", linkedin="linkedin.com/in/aarav-mehta-demo",
@@ -362,7 +360,6 @@ def write_docx(c: dict, path: Path) -> None:
         elif style == "bold":
             doc.add_paragraph().add_run(text).bold = True
         elif style == "p" and text == c["skills"] and c["layout"] == "C":
-            # some templates put skills in a table: exercise table extraction
             items = [s.strip() for s in text.split(",")]
             table = doc.add_table(rows=0, cols=3)
             for i in range(0, len(items), 3):

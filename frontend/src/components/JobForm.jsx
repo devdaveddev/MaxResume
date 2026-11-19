@@ -4,7 +4,6 @@ import { api, samples } from '../api'
 import { Card, Spinner } from './ui'
 import { useToast } from './toast'
 
-// Module 1: paste or upload a job description.
 export default function JobForm({ onCreated, pendingCount = 0 }) {
   const [title, setTitle] = useState('')
   const [text, setText] = useState('')
@@ -14,7 +13,7 @@ export default function JobForm({ onCreated, pendingCount = 0 }) {
   const [sampleJds, setSampleJds] = useState([])
   const [drag, setDrag] = useState(false)
   const fileInput = useRef(null)
-  const dragDepth = useRef(0) // dragenter/leave fire for every child element; count them so the highlight doesn't flicker
+  const dragDepth = useRef(0)
   const notify = useToast()
 
   const JD_TYPES = ['pdf', 'docx', 'txt']
@@ -25,7 +24,7 @@ export default function JobForm({ onCreated, pendingCount = 0 }) {
     setError(''); setFile(f)
   }
 
-  // Drops anywhere on the card are caught, so a file dropped on the textarea doesn't open in the browser tab.
+
   const dropHandlers = {
     onDragEnter: (e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); dragDepth.current += 1; setDrag(true) } },
     onDragOver: (e) => { if (e.dataTransfer.types.includes('Files')) e.preventDefault() },

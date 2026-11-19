@@ -114,7 +114,7 @@ def two_column_pdf(path: Path) -> None:
 
 
 def scanned_pdf(path: Path) -> None:
-    img = Image.new("L", (1654, 2339), 255)  # A4 at 200 dpi
+    img = Image.new("L", (1654, 2339), 255)
     d = ImageDraw.Draw(img)
     y = 120
     for line in SCANNED_LINES:

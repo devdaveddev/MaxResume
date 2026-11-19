@@ -65,7 +65,7 @@ class MemoryStore:
         if limit:
             docs = docs[:limit]
         docs = copy.deepcopy(docs)
-        if projection:  # mimic Mongo: inclusion ({"a": 1}) or exclusion ({"a": 0, "b.c": 0})
+        if projection:
             include = {k for k, v in projection.items() if v}
             if include:
                 docs = [{k: v for k, v in d.items() if k in include or k == "_id"} for d in docs]

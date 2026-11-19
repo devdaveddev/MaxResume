@@ -29,7 +29,7 @@ from ..nlp.embeddings import cosine_matrix
 from ..nlp.skills import extract_skills, find_skill_context
 from ..nlp.skills_taxonomy import IMPLIED_BY, semantic_query, siblings
 
-SCORER_VERSION = "2026.11.2"  # bump whenever scoring rules/thresholds change (stored with every score)
+SCORER_VERSION = "2026.11.2"
 
 DEFAULT_WEIGHTS = {
     "required_skills": 0.40,
@@ -46,26 +46,15 @@ LABELS = {
     "education": "Education",
 }
 
-# ---- skill credit rules -----------------------------------------------------
-CREDIT_EXACT_USED = 1.00   # skill named AND used in work experience/projects
-CREDIT_EXACT_LISTED = 0.85  # skill only listed (skills section / summary)
-CREDIT_SIBLING = 0.50      # has a substitute skill (MySQL for PostgreSQL)
-CREDIT_SEMANTIC = 0.50     # not named, but a resume sentence clearly implies it
+CREDIT_EXACT_USED = 1.00
+CREDIT_EXACT_LISTED = 0.85
+CREDIT_SIBLING = 0.50
+CREDIT_SEMANTIC = 0.50
 SKILL_SEMANTIC_THRESHOLD = 0.62
 
-# ---- semantic calibration ----------------------------------------------------
-# MiniLM cosine similarities for "same meaning, different words" pairs sit
-# around 0.55-0.75, unrelated pairs around 0.0-0.25. We linearly map
-# [SEM_FLOOR, SEM_CEIL] -> [0, 1] so the component uses the full range.
 SEM_FLOOR, SEM_CEIL = 0.25, 0.70
-# A role counts as relevant if ANY of these hold (calibrated on the sample set,
-# where backend roles score >= 0.50 on description and frontend / data /
-# QA roles score <= 0.44):
-ROLE_TITLE_THRESHOLD = 0.60  # job title close to the JD title
-ROLE_TEXT_THRESHOLD = 0.50   # role description close to the JD requirements
-# Unrelated work still shows professional maturity, so it counts for something, but never
-# enough to stand in for the role's own experience: a quarter per year, and at most half of
-# the JD's minimum. (A Java developer with 6 years cannot "meet" a 3-year frontend requirement.)
+ROLE_TITLE_THRESHOLD = 0.60
+ROLE_TEXT_THRESHOLD = 0.50
 UNRELATED_EXPERIENCE_FACTOR = 0.25
 UNRELATED_MAX_SHARE = 0.5
 
@@ -74,7 +63,6 @@ def _calibrate(sim: float) -> float:
     return float(np.clip((sim - SEM_FLOOR) / (SEM_CEIL - SEM_FLOOR), 0.0, 1.0))
 
 
-# ============================================================================ skills
 
 def _skill_credit(s: str, have: dict, full_text: str, sem_row, chunks: list[str], or_similar: bool) -> dict:
     """Best available evidence for one JD skill, in priority order:
@@ -89,7 +77,6 @@ def _skill_credit(s: str, have: dict, full_text: str, sem_row, chunks: list[str]
                 "evidence": f"Has {', '.join(implied)}, which requires {s}"}
     sib = sorted(siblings(s) & have.keys())
     if sib:
-        # "Kafka or similar message brokers": a substitute is explicitly acceptable
         credit = CREDIT_EXACT_LISTED if or_similar else CREDIT_SIBLING
         return {"skill": s, "credit": credit, "status": "partial", "how": "similar skill", "via": sib,
                 "evidence": f"Has {', '.join(sib)} (substitute for {s})"}
@@ -113,11 +100,9 @@ def _score_skill_list(jd_skills: list[str], resume: dict, chunks: list[str], wei
     full_text = "\n".join(chunks) + "\n" + resume.get("skills_text", "")
     or_similar = or_similar or set()
 
-    # semantic check only for skills not literally present (saves encoding work)
     unresolved = [s for s in jd_skills if s not in have]
     sem = cosine_matrix([semantic_query(s) for s in unresolved], chunks) if unresolved and chunks else None
 
-    # group alternatives: each item is a list of skills, any of which satisfies it
     items, seen = [], set()
     for s in jd_skills:
         if s in seen:
@@ -143,13 +128,11 @@ def _score_skill_list(jd_skills: list[str], resume: dict, chunks: list[str], wei
     return {"score": earned / total_w, "matched": matched, "partial": partial, "missing": missing}
 
 
-# ============================================================================ experience
 
 def _score_experience(jd: dict, resume: dict, jd_required: list[str]) -> dict:
     roles = resume.get("experience", [])
     jd_title = jd.get("title") or ""
     jd_skillset = set(jd_required)
-    # a role "uses the stack" if it mentions a quarter of the required skills (at least 2)
     min_overlap = max(2, -(-len(jd_skillset) // 4))
 
     role_info = []
@@ -179,7 +162,7 @@ def _score_experience(jd: dict, resume: dict, jd_required: list[str]) -> dict:
     rel_int = [(date.fromisoformat(r["start"]), date.fromisoformat(r["end"])) for r in role_info if r["relevant"]]
     relevant_years = round(total_months(rel_int) / 12, 1)
     total_years = float(resume.get("total_years") or 0.0)
-    if not roles:  # years only known from a "X years of experience" claim
+    if not roles:
         relevant_years = total_years
     min_y, max_y = jd.get("min_years"), jd.get("max_years")
     unrelated_credit = UNRELATED_EXPERIENCE_FACTOR * max(0.0, total_years - relevant_years)
@@ -201,7 +184,6 @@ def _score_experience(jd: dict, resume: dict, jd_required: list[str]) -> dict:
     }
 
 
-# ============================================================================ semantic
 
 def _score_semantic(jd: dict, chunks: list[str]) -> dict:
     reqs = jd.get("requirements", [])
@@ -218,7 +200,6 @@ def _score_semantic(jd: dict, chunks: list[str]) -> dict:
     return {"score": score, "pairs": pairs}
 
 
-# ============================================================================ education
 
 def _score_education(jd: dict, resume: dict, effective_years: float) -> dict:
     req = jd.get("education") or {}
@@ -234,7 +215,6 @@ def _score_education(jd: dict, resume: dict, effective_years: float) -> dict:
         level_score, status = 0.5, "one level below"
     else:
         level_score, status = 0.0, "below"
-    # "or equivalent practical experience": strong experience substitutes for the degree
     if level_score < 1 and req.get("equivalent_experience_ok") and effective_years >= (jd.get("min_years") or 3) + 2:
         level_score, status = max(level_score, 0.7), "equivalent experience"
     field_ok = (not fields) or bool(cand_fields & set(fields))
@@ -243,7 +223,6 @@ def _score_education(jd: dict, resume: dict, effective_years: float) -> dict:
             "required_fields": req.get("fields", []), "related_fields_ok": req.get("related_fields_ok", False), "candidate": resume.get("highest_degree"), "candidate_fields": sorted(cand_fields)}
 
 
-# ============================================================================ main
 
 def verdict(score: float) -> str:
     if score >= 80:
@@ -262,7 +241,7 @@ def score_candidate(jd: dict, resume: dict, weights: dict[str, float] | None = N
     alts, similar = jd.get("alternatives", []), set(jd.get("or_similar", []))
     req = _score_skill_list(jd["required_skills"], resume, chunks, {}, alts, similar)
     pref_list = jd["preferred_skills"] + jd.get("soft_skills", [])
-    pref_w = {s: 0.5 for s in jd.get("soft_skills", [])}  # soft skills count half
+    pref_w = {s: 0.5 for s in jd.get("soft_skills", [])}
     pref = _score_skill_list(pref_list, resume, chunks, pref_w, alts, similar)
     exp = _score_experience(jd, resume, jd["required_skills"])
     sem = _score_semantic(jd, chunks)
@@ -312,7 +291,6 @@ def score_candidate(jd: dict, resume: dict, weights: dict[str, float] | None = N
     return result
 
 
-# ============================================================================ explanations
 
 def _clip(text: str, n: int) -> str:
     """Shorten text to ~n characters on a word boundary."""
@@ -405,4 +383,4 @@ def build_reasons(jd: dict, r: dict) -> list[dict]:
         txt += f" (level {ed['status']}" + ("" if ed.get("field_match", True) else ", field differs") + ")."
         out.append({"kind": kind, "area": "education", "text": txt})
 
-    return out  # already grouped: skills -> experience -> semantic -> education
+    return out

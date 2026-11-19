@@ -3,7 +3,7 @@ import { CheckCircle2, AlertTriangle, X } from 'lucide-react'
 
 const ToastCtx = createContext(() => {})
 
-// Lightweight toast notifications: notify('Saved') or notify('Oops', 'error').
+
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([])
   const dismiss = (id) => setToasts((t) => t.filter((x) => x.id !== id))

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-os.environ.setdefault("STORAGE", "memory")  # tests never touch a real database
+os.environ.setdefault("STORAGE", "memory")
 ROOT = Path(__file__).resolve().parents[2]
 SAMPLES = ROOT / "sample_data"
 

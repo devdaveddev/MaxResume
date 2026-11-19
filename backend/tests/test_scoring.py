@@ -90,7 +90,6 @@ def test_unrelated_experience_counts_a_quarter_capped_at_half_the_requirement():
     assert e1["relevant_years"] > 0 and e2["relevant_years"] == 0
     expected = min(0.25 * e2["candidate_years"], 0.5 * e2["required_min"])
     assert abs(e2["effective_years"] - expected) < 0.11
-    # however much unrelated experience someone has, it never meets the requirement on its own
     r3 = copy.deepcopy(r2)
     r3["total_years"] = 40.0
     e3 = score_candidate(jd, r3)["experience"]

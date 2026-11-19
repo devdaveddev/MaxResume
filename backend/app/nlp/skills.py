@@ -11,25 +11,20 @@ from functools import lru_cache
 
 from .skills_taxonomy import CASE_SENSITIVE_ALIASES, SKILLS
 
-# Characters that can be part of a skill token: "C++", "C#", ".NET", "Node.js", "CI/CD"
-# "/" is a separator ("JavaScript/TypeScript", "REST/GraphQL"); aliases that contain one
-# ("CI/CD", "PL/SQL") still match whole because longer aliases claim their span first.
 _LEFT = r"(?<![A-Za-z0-9+#.\-])"
 _RIGHT = r"(?![A-Za-z0-9+#]|\.[A-Za-z0-9])"
 
 
 @lru_cache(maxsize=1)
 def _patterns() -> list[tuple[str, re.Pattern]]:
-    pats = []  # (canonical, pattern, alias_length)
+    pats = []
     for canonical, meta in SKILLS.items():
         for alias in meta["aliases"]:
             body = re.escape(alias).replace(r"\ ", r"[\s\-]+")
             if alias in CASE_SENSITIVE_ALIASES:
-                # also reject "Spring 2021" / "C 2019" style false positives (semesters, grades)
                 pats.append((canonical, re.compile(_LEFT + body + _RIGHT + r"(?!\s+\d{4})"), len(alias)))
             else:
                 pats.append((canonical, re.compile(_LEFT + body + _RIGHT, re.IGNORECASE), len(alias)))
-    # longer aliases first so "spring boot" claims its span before "spring"
     pats.sort(key=lambda p: -p[2])
     return [(c, pat) for c, pat, _ in pats]
 

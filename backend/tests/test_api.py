@@ -23,6 +23,6 @@ def test_end_to_end(samples):
         before = rows[0]["score"]
         c.put(f"/api/jobs/{job['id']}", json={"min_years": 15})
         after = c.get(f"/api/candidates/{rows[0]['id']}").json()["match"]["score"]
-        assert after < before  # stricter requirement -> rescored lower
+        assert after < before
 
         assert c.delete(f"/api/jobs/{job['id']}").status_code == 204

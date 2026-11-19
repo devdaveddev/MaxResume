@@ -6,7 +6,7 @@ from ..ingest.detect import EXTENSIONS as SUPPORTED_EXTENSIONS
 from ..ingest.detect import FileRejected
 from ..ingest.extractors import Extraction, extract, normalize_text
 
-UnsupportedFileError = FileRejected  # old name kept for callers/tests
+UnsupportedFileError = FileRejected
 
 __all__ = ["SUPPORTED_EXTENSIONS", "Extraction", "UnsupportedFileError", "extract", "extract_text", "normalize_text"]
 

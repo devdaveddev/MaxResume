@@ -16,7 +16,6 @@ import eval_parsing  # noqa: E402
 def test_parsing_accuracy_on_known_resumes(samples):
     result = eval_parsing.evaluate(eval_parsing.sample_truth() + eval_parsing.edge_truth()
                                    + eval_parsing.heldout_truth("dev") + eval_parsing.heldout_truth("heldout"))
-    # files whose converter is not installed (e.g. .rtf without LibreOffice) are skipped, not failed
     assert result["resumes"] + len(result["skipped"]) >= 28 and result["field_checks"] >= 450
     assert result["field_accuracy"] >= 0.98, result["failures"]
     assert result["skills"]["f1"] >= 0.98, result["failures"]

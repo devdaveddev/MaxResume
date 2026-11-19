@@ -41,11 +41,9 @@ LINKEDIN = re.compile(r"linkedin\.com/(?:in|pub)/[\w%-]+", re.I)
 GITHUB = re.compile(r"github\.com/[\w-]+", re.I)
 INSTITUTION = re.compile(r"universit|institut|college|school|\biit\b|\bnit\b|academy|polytechni|politecnic|"
                          r"\bkth\b|[ée]cole|hochschule|universidad|universidade|universit[àa]", re.I)
-# Column headers of resume tables ("Company | Designation | Duration"); never a title or company.
 TABLE_HEADER_WORDS = {"company", "organisation", "organization", "employer", "designation", "role", "title",
                       "position", "duration", "period", "dates", "date", "from", "to", "degree", "institute",
                       "institution", "university", "year", "percentage", "cgpa", "gpa", "board", "location"}
-# Country hints for reading local phone numbers ("07700 900123" in "Manchester, UK" is +44).
 COUNTRY_HINTS = {"GB": r"\b(?:uk|united kingdom|england|scotland|wales|london|manchester)\b",
                  "IN": r"\b(?:india|bengaluru|bangalore|mumbai|delhi|chennai|hyderabad|pune|kolkata)\b",
                  "US": r"\b(?:usa|united states|[A-Z]{2}\s+\d{5})\b", "CA": r"\bcanada\b",
@@ -69,7 +67,6 @@ def _nlp():
     return spacy.load("en_core_web_sm", disable=["lemmatizer"])
 
 
-# --------------------------------------------------------------------------- contact / name
 
 def _name_from_email(email: str | None) -> str | None:
     if not email:
@@ -82,7 +79,6 @@ def _name_from_email(email: str | None) -> str | None:
 def _extract_name(text: str, filename: str, email: str | None) -> tuple[str, str]:
     """Returns (name, source) with source in header | ner | email | filename."""
     for raw in [ln for ln in text.split("\n") if ln.strip()][:8]:
-        # "PRIYA NAIR — Data Engineer" / "Jane Doe | Backend Developer": the name is the first part
         line = re.split(r"\s[|•·,—–-]\s|\s{3,}", raw.strip())[0].strip(" :")
         line = re.sub(r"^(?:name|candidate)\s*[:\-]\s*", "", line, flags=re.I)
         if not line or EMAIL.search(line) or re.search(r"\d|https?:|www\.|@", line):
@@ -94,9 +90,8 @@ def _extract_name(text: str, filename: str, email: str | None) -> tuple[str, str
         if 2 <= len(words) <= 4 and all(re.fullmatch(r"[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ.'\-]*", w) for w in words):
             if not ROLE_WORDS.search(line) and not extract_skills(line):
                 return " ".join(w.capitalize() if w.isupper() and len(w) > 2 else w for w in words), "header"
-    top = "\n".join([ln for ln in text.split("\n") if ln.strip()][:4])  # names sit at the very top
+    top = "\n".join([ln for ln in text.split("\n") if ln.strip()][:4])
     for ent in _nlp()(top).ents:
-        # small NER models happily tag "Spring Boot" or a company as a person; reject those
         if (ent.label_ == "PERSON" and 1 < len(ent.text.split()) <= 4 and not ROLE_WORDS.search(ent.text)
                 and not extract_skills(ent.text) and not re.search(r"\b(?:analytics|labs|inc|ltd|corp|technologies|"
                                                                    r"solutions|systems|group|bank)\b", ent.text, re.I)):
@@ -140,7 +135,6 @@ def _extract_phones(text: str, region: str) -> list[dict]:
             match.number, phonenumbers.PhoneNumberFormat.INTERNATIONAL), "raw": match.raw_string})
     if out:
         return out
-    # fallback for numbers libphonenumber rejects (e.g. fictional 555 ranges): keep a plausible digit run
     for m in re.finditer(r"\+?\(?\d[\d\s().-]{8,}\d", head):
         digits = re.sub(r"\D", "", m.group())
         if 10 <= len(digits) <= 13 and not DATE_RANGE.search(m.group()):
@@ -156,7 +150,6 @@ def _classify_links(text: str, embedded: list[str]) -> dict:
     linkedin = next((m.group() for u in urls for m in [LINKEDIN.search(u)] if m), None)
     github = next((m.group() for u in urls for m in [GITHUB.search(u)] if m), None)
     others = [u for u in dict.fromkeys(urls) if not LINKEDIN.search(u) and not GITHUB.search(u)]
-    # the regexes capture "linkedin.com/in/x" without scheme; store canonical https URLs
     return {"linkedin": f"https://www.{linkedin}" if linkedin else None,
             "github": f"https://{github}" if github else None,
             "portfolio": others[:3]}
@@ -177,7 +170,6 @@ def _extract_location(header: str) -> str | None:
     return ", ".join(dict.fromkeys(gpes[:2])) or None
 
 
-# --------------------------------------------------------------------------- experience
 
 _SPLIT = r"\s*[|•·]\s*|\s{2,}|\s[-–—]\s|,\s(?=[A-Z])"
 
@@ -189,7 +181,6 @@ def _split_title_company(parts: list[str]) -> tuple[str | None, str | None]:
     parts = [p for p in parts if not re.fullmatch(r"(?:since|from)", p, re.I)]
     title = company = None
     for p in parts:
-        # "Software Engineer at Copperline" / "Senior Consultant @ Deloitte"
         if re.search(r"\s+(?:at|@)\s+", p, re.I) and not title:
             t, _, c = re.split(r"(\s+(?:at|@)\s+)", p, maxsplit=1, flags=re.I)
             return t.strip(), c.strip()
@@ -229,13 +220,12 @@ def _parse_experience(exp_text: str, today: date) -> tuple[list[dict], list[str]
             notes.append(f"Ignored an implausible date range: '{m.group(0)}'.")
             continue
         end = min(end, today)
-        # header pieces: the date line itself minus the date, the line above and the line below
         same_line = lines[i][: m.start()] + " | " + lines[i][m.end():]
         parts = re.split(_SPLIT, same_line)
         prev_end = hits[k - 1][0] if k else -1
         above = lines[i - 1].strip() if i - 1 > prev_end and i >= 1 else ""
         if above and all(p.strip().lower() in TABLE_HEADER_WORDS for p in re.split(r"\s*\|\s*", above) if p.strip()):
-            above = ""  # "Company | Designation | Duration" table header
+            above = ""
         below = lines[i + 1].strip() if i + 1 < len(lines) else ""
         if above and len(above.split()) <= 8 and not above.endswith("."):
             parts = re.split(_SPLIT, above) + parts
@@ -251,7 +241,7 @@ def _parse_experience(exp_text: str, today: date) -> tuple[list[dict], list[str]
                                    and len(lines[next_i - 1].split()) <= 8) else next_i
         description = "\n".join(ln for ln in lines[desc_start:desc_end] if ln.strip())
         key = ((title or "").lower(), (company or "").lower(), start)
-        if key in seen:  # same role repeated (e.g. listed in summary and experience)
+        if key in seen:
             continue
         seen.add(key)
         roles.append({
@@ -278,7 +268,6 @@ def _claimed_years(text: str) -> float | None:
     return None
 
 
-# --------------------------------------------------------------------------- education
 
 def _parse_education(edu_text: str) -> list[dict]:
     entries = []
@@ -291,7 +280,6 @@ def _parse_education(edu_text: str) -> list[dict]:
         inst = next((ln for ln in lines[i: i + 3] if INSTITUTION.search(ln)), None)
         years = [int(y) for y in re.findall(r"(?:19|20)\d{2}", context) if int(y) <= date.today().year + 6]
         gpa = GPA.search(context)
-        # "M.Sc. in Software Engineering, KTH Royal Institute of Technology, 2019, GPA 3.8"
         parts = [p.strip() for p in re.split(r",\s+|\s[|–—-]\s|\s{2,}", line) if p.strip()]
         degree = next((p for p in parts if degree_level(p)), parts[0])
         inst_part = next((p for p in parts if INSTITUTION.search(p)), None)
@@ -309,7 +297,6 @@ def _parse_education(edu_text: str) -> list[dict]:
     return entries
 
 
-# --------------------------------------------------------------------------- chunks
 
 def _unwrap(text: str) -> list[str]:
     """Re-join lines that a PDF wrapped mid-sentence.
@@ -339,7 +326,6 @@ def make_chunks(text: str, max_chunks: int = 150) -> list[str]:
     return list(dict.fromkeys(pieces))[:max_chunks]
 
 
-# --------------------------------------------------------------------------- main entry
 
 def parse_resume(text: str, filename: str, today: date | None = None, links: list[str] | None = None) -> dict:
     today = today or date.today()
@@ -348,15 +334,11 @@ def parse_resume(text: str, filename: str, today: date | None = None, links: lis
     header = sections.get("header", text[:600])
     notes: list[str] = []
 
-    # --- contact
     emails = _extract_emails(text)
     phones = _extract_phones(text, settings.default_phone_region)
     name, name_source = _extract_name(text, filename, emails[0] if emails else None)
     link_info = _classify_links(text, links or [])
 
-    # --- skills: count mentions, remember whether they were listed explicitly
-    #     in a skills section and/or backed by usage in experience/projects
-    # (education is excluded: "Electronics and Communication" is a degree, not a soft skill)
     skill_text = "\n".join(v for k, v in sections.items() if k != "education")
     counts = extract_skills(skill_text)
     in_skill_section = set(extract_skills(sections.get("skills", "")))
@@ -368,14 +350,13 @@ def parse_resume(text: str, filename: str, today: date | None = None, links: lis
         for s, n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
     ]
 
-    # --- experience
     exp_text = sections.get("experience")
-    if not exp_text:  # no heading found: scan everything except education/certifications/projects
+    if not exp_text:
         exp_text = "\n".join(v for k, v in sections.items() if k not in {"education", "certifications", "projects"})
         notes.append("No experience section heading found; roles were detected from the whole document.")
     roles, exp_notes = _parse_experience(exp_text, today)
     notes += exp_notes
-    roles.sort(key=lambda r: (r["end"], r["start"]), reverse=True)  # most recent first
+    roles.sort(key=lambda r: (r["end"], r["start"]), reverse=True)
     intervals = [(date.fromisoformat(r["start"]), date.fromisoformat(r["end"])) for r in roles]
     computed_years = round(total_months(intervals) / 12, 1) if roles else None
     claimed = _claimed_years(sections.get("summary", "") + "\n" + header)
@@ -384,7 +365,6 @@ def parse_resume(text: str, filename: str, today: date | None = None, links: lis
                 for a, b in gaps(intervals)]
     overlap_months = sum(r["months"] for r in roles) - total_months(intervals)
 
-    # --- education
     edu_text = sections.get("education") or text
     education = _parse_education(edu_text)
     highest = max((e["level"] for e in education), default=0)
@@ -427,8 +407,5 @@ def parse_resume(text: str, filename: str, today: date | None = None, links: lis
                           "experience": "dated roles" if roles else ("claimed in text" if claimed else None)},
         "parse_notes": notes,
         "skills_text": sections.get("skills", "")[:2000],
-        # Semantic evidence comes from what the candidate *did* (summary,
-        # experience, projects ...), not from the bare skills list, which is
-        # already scored by the skills component.
         "chunks": make_chunks("\n".join(v for k, v in sections.items() if k != "skills")),
     }

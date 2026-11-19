@@ -30,7 +30,6 @@ def redact(value: str) -> str:
     value = _EMAIL.sub(lambda m: f"{m.group(1)}***@***", value)
     def _mask_phone(m: re.Match) -> str:
         digits = re.sub(r"\D", "", m.group())
-        # 9+ digits looks like a phone number; shorter runs are dates, sizes, ids
         return "***" + digits[-2:] if len(digits) >= 9 else m.group()
 
     return _PHONE.sub(_mask_phone, value)
@@ -42,7 +41,6 @@ class ContextFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         record.request_id = request_id_var.get()
         record.actor = actor_var.get()
-        # render %-args first so redaction sees the final text
         if record.args:
             try:
                 record.msg = record.getMessage()
@@ -81,11 +79,10 @@ def setup_logging(level: str = "INFO", json_logs: bool = False) -> None:
     root = logging.getLogger()
     root.handlers[:] = [handler]
     root.setLevel(level)
-    # uvicorn's own loggers go through the same handler/format
     for name in ("uvicorn", "uvicorn.error"):
         lg = logging.getLogger(name)
         lg.handlers[:] = []
         lg.propagate = True
-    logging.getLogger("uvicorn.access").disabled = True  # replaced by our access log middleware
+    logging.getLogger("uvicorn.access").disabled = True
     for noisy in ("httpx", "httpx2", "sentence_transformers", "pdfminer", "urllib3", "filelock", "huggingface_hub"):
         logging.getLogger(noisy).setLevel(logging.WARNING)

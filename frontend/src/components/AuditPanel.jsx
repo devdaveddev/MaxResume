@@ -44,7 +44,6 @@ function describe(e) {
   }
 }
 
-// Per-job activity history from the tamper-evident audit log.
 export default function AuditPanel({ jobId, onClose }) {
   const [entries, setEntries] = useState(null)
   const [hideViews, setHideViews] = useState(true)

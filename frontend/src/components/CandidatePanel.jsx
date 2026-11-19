@@ -24,7 +24,6 @@ function Section({ icon, title, children, aside }) {
   )
 }
 
-// How the overall percentage was computed: each component's weighted points.
 function Breakdown({ match }) {
   const applied = match.breakdown.filter((b) => b.applied)
   return (
@@ -87,7 +86,6 @@ function ExperienceBars({ exp }) {
   )
 }
 
-// Module 5: everything a recruiter needs to understand one candidate's score.
 export default function CandidatePanel({ id, ids, onNavigate, onClose }) {
   const [c, setC] = useState(null)
   const [error, setError] = useState('')

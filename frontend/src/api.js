@@ -1,5 +1,4 @@
-// Thin wrapper around the FastAPI backend. All paths are proxied by Vite in dev.
-// When the API runs with API_KEYS, set VITE_API_KEY at build time to send it.
+
 const API_KEY = import.meta.env.VITE_API_KEY
 
 function withAuth(options = {}) {
@@ -15,7 +14,9 @@ async function request(path, options = {}) {
       const body = await res.json()
       msg = body.error?.message || (typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail))
       requestId = body.error?.request_id || requestId
-    } catch { /* non-JSON error */ }
+    } catch {
+      msg = `${res.status} ${res.statusText}`
+    }
     const err = new Error(msg)
     err.requestId = requestId
     throw err
@@ -53,8 +54,8 @@ export const api = {
   config: () => request('/config'),
 }
 
-// Demo helpers: fetch bundled synthetic samples and turn them into File objects,
-// so they go through exactly the same upload path as a real recruiter's files.
+
+
 export const samples = {
   list: () => request('/samples'),
   resumeFiles: async (names, group = 'resumes') => Promise.all(names.map(async (name) => {
@@ -63,12 +64,12 @@ export const samples = {
   })),
 }
 
-// Downloads go through fetch (not a plain <a href>) so the API key header is sent when auth is on.
+
 export async function download(url, { open = false } = {}) {
   const res = await fetch(url, withAuth())
   if (!res.ok) {
     let msg = `Download failed (${res.status})`
-    try { msg = (await res.json()).error?.message || msg } catch { /* non-JSON error */ }
+    try { msg = (await res.json()).error?.message || msg } catch { msg = `Download failed (${res.status})` }
     if (res.status === 404) msg = 'This job is no longer on the server (the free demo resets when idle). Create it again and re-upload the resumes.'
     throw new Error(msg)
   }

@@ -1,4 +1,3 @@
-// Small presentational building blocks shared across the app.
 
 export function scoreColor(score) {
   if (score >= 80) return 'var(--good)'
@@ -71,7 +70,7 @@ export function Spinner({ label }) {
 
 export const fmtYears = (y) => (y == null ? '—' : `${Number(y).toFixed(1).replace(/\.0$/, '')} yr${y === 1 ? '' : 's'}`)
 
-// Coloured initials avatar; the colour is derived from the name so it is stable.
+
 export function Avatar({ name, size = 34 }) {
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('')
   const hue = [...name].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) % 360, 7)
@@ -82,7 +81,6 @@ export function Avatar({ name, size = 34 }) {
   )
 }
 
-// 1 → 2 → 3 progress indicator for the recruiter workflow.
 export function Stepper({ steps }) {
   return (
     <ol className="stepper">
@@ -106,7 +104,7 @@ export function StatCard({ label, value, sub, accent }) {
   )
 }
 
-// Small "?" button that reveals a plain-language explanation.
+
 export function Help({ children, label = 'How does this work?' }) {
   return (
     <details className="help" onClick={(e) => e.stopPropagation()}>

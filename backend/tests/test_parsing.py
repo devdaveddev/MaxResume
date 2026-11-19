@@ -10,11 +10,10 @@ from app.nlp.text_extract import extract_text
 TODAY = date(2026, 11, 1)
 
 
-# ---------------------------------------------------------------- skills
 def test_alias_matching_and_boundaries():
     s = extract_skills("Built services in Java 17 with Spring Boot, Postgres and k8s; some JavaScript.")
     assert {"Java", "Spring Boot", "PostgreSQL", "Kubernetes", "JavaScript"} <= s.keys()
-    assert "Spring Framework" not in s  # "Spring Boot" claims the span
+    assert "Spring Framework" not in s
 
 
 def test_ambiguous_words_are_not_skills():
@@ -33,7 +32,6 @@ def test_alternatives_and_or_similar():
     assert "Kafka" in similar
 
 
-# ---------------------------------------------------------------- dates
 def test_date_parsing_variants():
     assert parse_date("Mar 2019") == date(2019, 3, 1)
     assert parse_date("Sept 2020") == date(2020, 9, 1)
@@ -43,19 +41,17 @@ def test_date_parsing_variants():
 
 
 def test_overlapping_jobs_not_double_counted():
-    a = (date(2020, 1, 1), date(2021, 12, 1))  # 24 months
-    b = (date(2021, 1, 1), date(2022, 12, 1))  # overlaps 12 months
+    a = (date(2020, 1, 1), date(2021, 12, 1))
+    b = (date(2021, 1, 1), date(2022, 12, 1))
     assert len(merge_intervals([a, b])) == 1
     assert total_months([a, b]) == 36
 
 
-# ---------------------------------------------------------------- sections
 def test_section_split_with_inline_heading():
     s = split_sections("Jane Doe\nSkills: Java, SQL\nWORK EXPERIENCE\nDev at X\nEducation\nB.Tech")
     assert s["skills"] == "Java, SQL" and "Dev at X" in s["experience"] and "B.Tech" in s["education"]
 
 
-# ---------------------------------------------------------------- resumes
 def test_pdf_resume_layout_a(samples):
     f = samples / "resumes" / "aarav_mehta.pdf"
     r = parse_resume(extract_text(f.name, f.read_bytes()), f.name, today=TODAY)
@@ -75,7 +71,7 @@ def test_docx_resume_with_skills_table_layout_c(samples):
     assert len(r["experience"]) == 3
     assert r["experience"][0]["company"] == "Orbit Pay"
     skills = {s["name"]: s for s in r["skills"]}
-    assert skills["Terraform"]["listed"]  # came from the table inside the Skills section
+    assert skills["Terraform"]["listed"]
     assert r["highest_degree"] == "Master's"
 
 
@@ -87,12 +83,11 @@ def test_company_first_layout_b(samples):
 
 
 def test_degree_name_is_not_a_soft_skill(samples):
-    f = samples / "resumes" / "arjun_nair.docx"  # "Electronics and Communication"
+    f = samples / "resumes" / "arjun_nair.docx"
     r = parse_resume(extract_text(f.name, f.read_bytes()), f.name, today=TODAY)
     assert "Communication" not in r["soft_skills"]
 
 
-# ---------------------------------------------------------------- job descriptions
 def test_jd_parsing(samples):
     jd = parse_jd((samples / "job_descriptions" / "senior_java_backend_engineer.txt").read_text())
     assert jd["title"] == "Senior Java Backend Engineer"
@@ -102,7 +97,6 @@ def test_jd_parsing(samples):
     assert jd["min_years"] == 5
     assert jd["education"]["min_level"] == 2 and jd["education"]["equivalent_experience_ok"]
     assert ["Jenkins", "GitHub Actions"] in jd["alternatives"]
-    # benefits / about-us text must not leak into requirements
     assert not any("salary" in r.lower() for r in jd["requirements"])
 
 

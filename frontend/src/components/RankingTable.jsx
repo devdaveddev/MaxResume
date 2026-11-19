@@ -8,7 +8,6 @@ const VERDICTS = ['All', 'Strong match', 'Good match', 'Partial match', 'Weak ma
 const MAX_CHIPS = 4
 const MEDAL = ['#d4a017', '#9ca3af', '#b87333']
 
-// Module 4: ranked candidate dashboard.
 export default function RankingTable({ jobId, rows, selectedId, onSelect, onDelete }) {
   const [q, setQ] = useState('')
   const [verdict, setVerdict] = useState('All')

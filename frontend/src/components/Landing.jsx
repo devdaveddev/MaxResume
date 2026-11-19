@@ -13,9 +13,9 @@ const STEPS = [
 
 const RESUME_TYPES = '.pdf,.docx,.doc,.odt,.rtf,.txt'
 
-// Product mock-ups for the hero. The two preview cards are decorative; the upload card is real:
-// it opens the file picker, keeps the chosen resumes ready, and they are analysed automatically
-// as soon as the job description is added (every score needs a job to compare against).
+
+
+
 function HeroArt({ onPick, pendingCount }) {
   const input = useRef(null)
   return (
@@ -56,7 +56,7 @@ function HeroArt({ onPick, pendingCount }) {
 }
 
 export default function Landing({ jobs, onCreated, onOpenJob, pendingResumes, onPickResumes, onClearResumes }) {
-  // Scroll to the JD form and put the cursor in it: adding the job is always step 1.
+
   const toStart = () => {
     document.getElementById('start')?.scrollIntoView({ behavior: 'smooth' })
     setTimeout(() => document.querySelector('.job-form textarea')?.focus({ preventScroll: true }), 500)
@@ -64,7 +64,7 @@ export default function Landing({ jobs, onCreated, onOpenJob, pendingResumes, on
 
   return (
     <div className="landing">
-      {/* ---------------- hero ---------------- */}
+
       <section className="hero">
         <div className="hero-copy">
           <p className="hero-eyebrow"><Sparkles size={18} /> AI hiring assistant</p>
@@ -81,7 +81,7 @@ export default function Landing({ jobs, onCreated, onOpenJob, pendingResumes, on
         <HeroArt pendingCount={pendingResumes.length} onPick={(files) => { onPickResumes(files); toStart() }} />
       </section>
 
-      {/* ---------------- value strip ---------------- */}
+
       <section className="value-strip">
         <span>Understands meaning, not just keywords</span>
         <i className="spark" aria-hidden="true" />
@@ -90,7 +90,7 @@ export default function Landing({ jobs, onCreated, onOpenJob, pendingResumes, on
         <span><ShieldCheck size={16} /> Every action audited</span>
       </section>
 
-      {/* ---------------- how it works ---------------- */}
+
       <section className="how">
         <h2 className="section-title">How MaxResume works</h2>
         <ol className="how-steps">
@@ -104,7 +104,7 @@ export default function Landing({ jobs, onCreated, onOpenJob, pendingResumes, on
         </ol>
       </section>
 
-      {/* ---------------- explained panel ---------------- */}
+
       <section className="explain-panel">
         <p className="panel-kicker">Why MaxResume</p>
         <div className="explain-grid">
@@ -134,7 +134,7 @@ export default function Landing({ jobs, onCreated, onOpenJob, pendingResumes, on
         </div>
       </section>
 
-      {/* ---------------- start ---------------- */}
+
       <section className="start-section" id="start">
         <div className="start-copy">
           <h2 className="section-title">Start with the role</h2>

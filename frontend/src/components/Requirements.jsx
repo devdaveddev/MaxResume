@@ -43,8 +43,7 @@ function SkillEditor({ label, skills, onChange, allSkills, kind, alternatives })
   )
 }
 
-// Shows what was extracted from the JD and lets the recruiter correct it.
-// Saving re-scores every candidate for this job on the server.
+
 export default function Requirements({ job, allSkills, onSave, defaultOpen = true }) {
   const p = job.parsed
   const [open, setOpen] = useState(defaultOpen)
@@ -61,7 +60,7 @@ export default function Requirements({ job, allSkills, onSave, defaultOpen = tru
   useEffect(() => {
     setReq(p.required_skills); setPref(p.preferred_skills); setYears(p.min_years ?? '')
     setEdu(p.education.min_level); setWeights(job.weights)
-  }, [job]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [job])
 
   const dirty = useMemo(() => (
     JSON.stringify(req) !== JSON.stringify(p.required_skills) ||

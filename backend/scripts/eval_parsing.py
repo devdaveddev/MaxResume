@@ -119,7 +119,7 @@ def _norm(s: str | None) -> str:
 
 
 def evaluate(truths: list[dict]) -> dict:
-    fields: dict[str, list[int]] = defaultdict(lambda: [0, 0])  # field -> [correct, total]
+    fields: dict[str, list[int]] = defaultdict(lambda: [0, 0])
     skill_tp = skill_fn = skill_fp = 0
     failures: list[str] = []
     skipped: list[str] = []
@@ -138,7 +138,7 @@ def evaluate(truths: list[dict]) -> dict:
         try:
             ex = extract(f.name, f.read_bytes())
         except FileRejected as e:
-            if e.code == "unsupported":  # e.g. .rtf on a machine without LibreOffice
+            if e.code == "unsupported":
                 skipped.append(f"{f.name}: {e}")
                 continue
             raise
@@ -155,7 +155,6 @@ def evaluate(truths: list[dict]) -> dict:
         if t["linkedin"]:
             check("linkedin", bool(p["linkedin"]) and t["linkedin"] in p["linkedin"], lab, p["linkedin"], t["linkedin"])
 
-        # --- roles, matched in order of start date (most recent first)
         want_roles = sorted(t["roles"], key=lambda r: r[2], reverse=True)
         got_roles = sorted(p["experience"], key=lambda r: r["start"], reverse=True)
         check("role_count", len(got_roles) == len(want_roles), lab, len(got_roles), len(want_roles))
@@ -179,7 +178,6 @@ def evaluate(truths: list[dict]) -> dict:
         if len(p["education"]) < len(t["education"]):
             check("degree_level", False, lab, len(p["education"]), len(t["education"]))
 
-        # --- skills: recall of listed skills; precision = reported skills actually present in the text
         got = set(p["skills"] and [s["name"] for s in p["skills"]])
         tp = len(got & t["skills"])
         skill_tp += tp

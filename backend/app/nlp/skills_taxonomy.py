@@ -15,9 +15,7 @@ review and extend during the interview.
 
 from __future__ import annotations
 
-# canonical -> (category, family | None, [aliases])
 _RAW: dict[str, tuple[str, str | None, list[str]]] = {
-    # ---------------- Programming languages ----------------
     "Java": ("Languages", None, ["java", "core java", "java 8", "java 11", "java 17", "java 21", "j2ee", "java ee"]),
     "Python": ("Languages", None, ["python", "python3", "python 3"]),
     "JavaScript": ("Languages", "js-lang", ["javascript", "js", "ecmascript", "es6"]),
@@ -36,7 +34,6 @@ _RAW: dict[str, tuple[str, str | None, list[str]]] = {
     "SQL": ("Databases", None, ["sql", "t-sql", "pl/sql", "plsql", "ansi sql"]),
     "Bash": ("Languages", None, ["bash", "shell scripting", "shell script", "unix shell"]),
 
-    # ---------------- Backend frameworks ----------------
     "Spring Boot": ("Backend", "java-web", ["spring boot", "springboot", "spring-boot"]),
     "Spring Framework": ("Backend", "java-web", ["spring framework", "spring mvc", "Spring", "spring core"]),
     "Hibernate": ("Backend", "orm", ["hibernate", "jpa", "spring data jpa"]),
@@ -58,7 +55,6 @@ _RAW: dict[str, tuple[str, str | None, list[str]]] = {
     "Multithreading": ("Backend", None, ["multithreading", "multi-threading", "concurrency", "concurrent programming"]),
     "Data Structures & Algorithms": ("Fundamentals", None, ["data structures", "algorithms", "dsa"]),
 
-    # ---------------- Frontend ----------------
     "React": ("Frontend", "spa", ["react", "react.js", "reactjs"]),
     "Angular": ("Frontend", "spa", ["angular", "angularjs", "angular.js"]),
     "Vue.js": ("Frontend", "spa", ["vue", "vue.js", "vuejs"]),
@@ -68,7 +64,6 @@ _RAW: dict[str, tuple[str, str | None, list[str]]] = {
     "CSS": ("Frontend", None, ["css", "css3", "scss", "sass"]),
     "Tailwind CSS": ("Frontend", None, ["tailwind", "tailwind css", "tailwindcss"]),
 
-    # ---------------- Databases ----------------
     "PostgreSQL": ("Databases", "rdbms", ["postgresql", "postgres", "psql"]),
     "MySQL": ("Databases", "rdbms", ["mysql", "mariadb"]),
     "Oracle DB": ("Databases", "rdbms", ["oracle", "oracle db", "oracle database"]),
@@ -79,13 +74,11 @@ _RAW: dict[str, tuple[str, str | None, list[str]]] = {
     "Redis": ("Databases", "cache", ["redis"]),
     "Elasticsearch": ("Databases", None, ["elasticsearch", "elastic search", "opensearch", "elk"]),
 
-    # ---------------- Messaging ----------------
     "Kafka": ("Messaging", "mq", ["kafka", "apache kafka"]),
     "RabbitMQ": ("Messaging", "mq", ["rabbitmq", "rabbit mq"]),
     "ActiveMQ": ("Messaging", "mq", ["activemq"]),
     "AWS SQS": ("Messaging", "mq", ["sqs", "aws sqs"]),
 
-    # ---------------- Cloud & DevOps ----------------
     "AWS": ("Cloud", "cloud", ["aws", "amazon web services", "ec2", "s3", "aws lambda"]),
     "Azure": ("Cloud", "cloud", ["azure", "microsoft azure"]),
     "GCP": ("Cloud", "cloud", ["gcp", "google cloud", "google cloud platform"]),
@@ -104,7 +97,6 @@ _RAW: dict[str, tuple[str, str | None, list[str]]] = {
     "Prometheus": ("DevOps", "observability", ["prometheus"]),
     "Grafana": ("DevOps", "observability", ["grafana"]),
 
-    # ---------------- Testing & process ----------------
     "JUnit": ("Testing", "unit-test", ["junit", "junit5", "mockito"]),
     "PyTest": ("Testing", "unit-test", ["pytest"]),
     "Jest": ("Testing", "unit-test", ["jest"]),
@@ -113,7 +105,6 @@ _RAW: dict[str, tuple[str, str | None, list[str]]] = {
     "Agile": ("Process", None, ["agile", "scrum", "kanban", "sprint planning"]),
     "Jira": ("Tools", None, ["jira"]),
 
-    # ---------------- Data / ML ----------------
     "Machine Learning": ("Data & AI", None, ["machine learning", "ml"]),
     "Deep Learning": ("Data & AI", None, ["deep learning", "neural networks"]),
     "NLP": ("Data & AI", None, ["nlp", "natural language processing"]),
@@ -134,10 +125,8 @@ _RAW: dict[str, tuple[str, str | None, list[str]]] = {
     "Excel": ("Tools", None, ["Excel", "ms excel", "advanced excel"]),
     "MLOps": ("Data & AI", None, ["mlops", "mlflow", "model deployment"]),
 
-    # ---------------- Security ----------------
     "OAuth / JWT": ("Security", None, ["oauth", "oauth2", "jwt", "spring security", "openid connect"]),
 
-    # ---------------- Frontend tooling & design ----------------
     "Figma": ("Design", None, ["figma"]),
     "Storybook": ("Frontend", None, ["storybook"]),
     "Accessibility": ("Frontend", None, ["accessibility", "wcag", "a11y"]),
@@ -147,7 +136,6 @@ _RAW: dict[str, tuple[str, str | None, list[str]]] = {
     "Cypress": ("Testing", "e2e-test", ["cypress"]),
     "Playwright": ("Testing", "e2e-test", ["playwright"]),
 
-    # ---------------- Data platforms ----------------
     "dbt": ("Data Engineering", None, ["dbt"]),
     "Snowflake": ("Data Engineering", "warehouse", ["snowflake"]),
     "BigQuery": ("Data Engineering", "warehouse", ["bigquery"]),
@@ -157,7 +145,6 @@ _RAW: dict[str, tuple[str, str | None, list[str]]] = {
     "Looker": ("Data & AI", "bi", ["looker", "looker studio"]),
     "Data Visualization": ("Data & AI", None, ["data visualization", "data visualisation", "dashboards", "dashboarding"]),
 
-    # ---------------- Operations & reliability ----------------
     "Helm": ("DevOps", None, ["helm"]),
     "ArgoCD": ("DevOps", "gitops", ["argocd", "argo cd", "fluxcd"]),
     "OpenTelemetry": ("DevOps", "observability", ["opentelemetry", "otel"]),
@@ -167,16 +154,11 @@ _RAW: dict[str, tuple[str, str | None, list[str]]] = {
                                             "on call", "on-call", "postmortems", "post-mortems"]),
     "Celery": ("Backend", None, ["celery"]),
 
-    # ---------------- Soft skills ----------------
     "Communication": ("Soft Skills", None, ["communication skills", "communication", "stakeholder management"]),
     "Leadership": ("Soft Skills", None, ["leadership", "mentoring", "mentored", "team lead", "led a team"]),
     "Problem Solving": ("Soft Skills", None, ["problem solving", "problem-solving", "analytical skills"]),
 }
 
-# Short plain-English descriptions used to build the embedding query when we
-# look for a skill that is *implied* but not named. Bare tokens like "Kafka"
-# embed poorly; "event streaming / message broker" matches how people
-# actually describe the work.
 DESCRIPTIONS: dict[str, str] = {
     "Kafka": "event streaming platform, publishing and consuming messages between services",
     "RabbitMQ": "message broker and message queues for asynchronous processing",
@@ -212,8 +194,6 @@ DESCRIPTIONS: dict[str, str] = {
 }
 
 
-# Hard implications: knowing any skill on the right means you know the skill on
-# the left (you cannot use PostgreSQL without SQL, or GitHub Actions without Git).
 IMPLIED_BY: dict[str, set[str]] = {
     "SQL": {"PostgreSQL", "MySQL", "Oracle DB", "SQL Server"},
     "Git": {"GitHub Actions", "GitLab CI"},
@@ -232,18 +212,14 @@ def semantic_query(skill: str) -> str:
     return f"{skill}: {desc}" if desc else f"experience with {skill}"
 
 
-# Aliases that must match with exact case (short words that are also common
-# English words or letters: "Go home", "R&D", "Plan C" ...).
 CASE_SENSITIVE_ALIASES = {"C", "Go", "R", "REST", "Excel", "Spring"}
 
-# Soft skills are shown but weighted lower than technical skills in scoring.
 SOFT_SKILL_CATEGORY = "Soft Skills"
 
 
 def _build():
     skills = {}
     for canonical, (category, family, aliases) in _RAW.items():
-        # always allow the canonical name itself as an alias
         all_aliases = list(dict.fromkeys([*aliases, canonical if canonical in CASE_SENSITIVE_ALIASES else canonical.lower()]))
         skills[canonical] = {"category": category, "family": family, "aliases": all_aliases}
     return skills

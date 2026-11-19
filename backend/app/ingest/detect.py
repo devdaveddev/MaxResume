@@ -33,7 +33,7 @@ MEDIA_TYPES = {
     "txt": "text/plain; charset=utf-8",
 }
 
-_OLE = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"  # legacy MS Office compound file
+_OLE = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
 _REJECT_SIGNATURES = {
     b"MZ": "executable", b"\x7fELF": "executable", b"\x89PNG": "image", b"\xff\xd8\xff": "image",
     b"GIF8": "image", b"Rar!": "archive", b"7z\xbc\xaf": "archive", b"\x1f\x8b": "archive",

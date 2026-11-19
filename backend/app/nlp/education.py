@@ -6,7 +6,6 @@ import re
 
 LEVEL_NAMES = {1: "Diploma / Associate", 2: "Bachelor's", 3: "Master's", 4: "Doctorate"}
 
-# Abbreviations are matched case-sensitively ("BE"/"MS" are also English words / "me" / "be").
 _DEGREE_PATTERNS: list[tuple[int, re.Pattern]] = [
     (4, re.compile(r"\b(?:ph\.?\s?d|doctorate|doctor of philosophy)\b", re.I)),
     (3, re.compile(r"\b(?:master'?s?|post[\s-]?graduate)\b", re.I)),
@@ -28,7 +27,6 @@ FIELDS = {
     "Business": ["business administration", "commerce", "management", "finance", "economics"],
 }
 
-# Fields that a "Computer Science or related field" requirement should accept.
 RELATED_TECH_FIELDS = {"Computer Science", "Information Technology", "Software Engineering",
                        "Electronics / Electrical", "Data Science / AI", "Mathematics / Statistics"}
 

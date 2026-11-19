@@ -53,7 +53,6 @@ class Extraction:
         return d
 
 
-# =========================================================================== public entry
 
 def extract(filename: str, data: bytes) -> Extraction:
     kind, warnings = sniff(data, filename)
@@ -75,7 +74,6 @@ def extract(filename: str, data: bytes) -> Extraction:
     return ex
 
 
-# =========================================================================== PDF
 
 def _ocr_available() -> bool:
     return get_settings().ocr_enabled and shutil.which("tesseract") is not None
@@ -102,7 +100,7 @@ def _find_gutter(words: list[dict], width: float) -> float | None:
         return None
     n = len(words)
     lines = {round(w["top"] / 3) for w in words}
-    tolerance = max(2, int(0.04 * len(lines)))  # full-width headings may cross the gutter
+    tolerance = max(2, int(0.04 * len(lines)))
     best_run, run_start = (0.0, None), None
     xs = [x / 2 for x in range(int(width * 0.25 * 2), int(width * 0.75 * 2))]
     for x in xs + [None]:
@@ -178,7 +176,6 @@ def _two_column_text(words: list[dict], gutter: float) -> str:
 
 
 def _is_password_error(e: BaseException) -> bool:
-    # pdfplumber wraps pdfminer's PDFPasswordIncorrect in its own PdfminerException
     seen = 0
     while e is not None and seen < 5:
         if "Password" in type(e).__name__ or "password" in str(e).lower() or \
@@ -223,7 +220,7 @@ def _pdf(data: bytes) -> Extraction:
             ex.warnings.append(f"Document has {ex.pages} pages; only the first {s.max_pdf_pages} were read.")
         ocr_budget = s.ocr_max_pages if _ocr_available() else 0
         for i, page in enumerate(pages[: s.max_pdf_pages], start=1):
-            with contextlib.suppress(Exception):  # broken annotations should not fail the page
+            with contextlib.suppress(Exception):
                 ex.links += [h.get("uri") for h in (page.hyperlinks or []) if h.get("uri")]
             words = page.extract_words(x_tolerance=1.5, y_tolerance=3) or []
             gutter = _find_gutter(words, float(page.width))
@@ -255,7 +252,6 @@ def _pdf(data: bytes) -> Extraction:
     return ex
 
 
-# =========================================================================== DOCX
 
 _W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 
@@ -282,7 +278,7 @@ def _docx(data: bytes) -> Extraction:
         for row in tbl.rows:
             seen, cells = set(), []
             for cell in row.cells:
-                if id(cell._tc) in seen:  # merged cells repeat the same element
+                if id(cell._tc) in seen:
                     continue
                 seen.add(id(cell._tc))
                 if cell.text.strip():
@@ -292,7 +288,6 @@ def _docx(data: bytes) -> Extraction:
             out.append(" | ".join(cells))
         return out
 
-    # headers first: many templates put name/contact details in the page header
     header_seen = set()
     for section in doc.sections:
         for part in (section.header, section.first_page_header):
@@ -306,7 +301,6 @@ def _docx(data: bytes) -> Extraction:
             except Exception:  # noqa: BLE001 - missing header parts are fine
                 continue
 
-    # body in document order so tables stay inside their section
     for child in doc.element.body.iterchildren():
         tag = child.tag.rsplit("}", 1)[-1]
         if tag == "p":
@@ -323,7 +317,6 @@ def _docx(data: bytes) -> Extraction:
         except Exception:  # noqa: BLE001
             continue
 
-    # hyperlink targets from the body *and* header/footer parts (each part has its own relationships)
     parts = [doc.part]
     for section in doc.sections:
         for hf in (section.header, section.first_page_header, section.footer):
@@ -340,10 +333,9 @@ def _docx(data: bytes) -> Extraction:
     return ex
 
 
-# =========================================================================== ODT
 
 def _odt(data: bytes) -> Extraction:
-    converted = _via_docx(data, "odt")  # keeps page headers; falls back to reading content.xml
+    converted = _via_docx(data, "odt")
     if converted:
         return converted
     ex = Extraction(text="", file_type="odt", method="odt", sha256="", size_bytes=0)
@@ -359,7 +351,6 @@ def _odt(data: bytes) -> Extraction:
     return ex
 
 
-# =========================================================================== DOC / RTF (external converters)
 
 def _run(cmd: list[str]) -> str:
     s = get_settings()
@@ -380,7 +371,6 @@ def _libreoffice_convert(data: bytes, suffix: str, target: str) -> bytes | None:
     with tempfile.TemporaryDirectory(prefix="maxresume-") as tmp:
         src = Path(tmp) / f"input.{suffix}"
         src.write_bytes(data)
-        # isolated profile dir so concurrent conversions don't fight over a lock file
         _run([office, f"-env:UserInstallation=file://{tmp}/profile", "--headless", "--convert-to", target,
               "--outdir", tmp, str(src)])
         out = Path(tmp) / f"input.{target.split(':')[0]}"
@@ -415,7 +405,7 @@ def _doc(data: bytes) -> Extraction:
                 ex.text = _run(["antiword", "-w", "0", f.name])
                 return ex
             except RuntimeError:
-                pass  # some .doc variants are not supported by antiword
+                pass
     raise FileRejected("unsupported", "Legacy .doc files need LibreOffice or antiword on the server. "
                                       "Please upload PDF or DOCX.")
 
@@ -427,7 +417,6 @@ def _rtf(data: bytes) -> Extraction:
     raise FileRejected("unsupported", "RTF files need LibreOffice on the server. Please upload PDF or DOCX.")
 
 
-# =========================================================================== TXT
 
 def _txt(data: bytes) -> Extraction:
     ex = Extraction(text="", file_type="txt", method="plain", sha256="", size_bytes=0)
@@ -442,21 +431,19 @@ def _txt(data: bytes) -> Extraction:
     return ex
 
 
-# =========================================================================== normalisation
 
 _BULLETS = re.compile(r"^[\s]*[•●▪◦‣∙·\-\*–—►✓➢❖■□➤→]+\s*", re.MULTILINE)
-# control chars, soft hyphen, zero-width spaces/joiners, line/paragraph separators, BOM
 _CONTROL = re.compile("[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f\\u00ad\\u200b-\\u200f\\u2028\\u2029\\ufeff]")
 
 
 def normalize_text(text: str) -> str:
-    text = unicodedata.normalize("NFKC", text)  # also expands ligatures: "ﬁ" -> "fi"
+    text = unicodedata.normalize("NFKC", text)
     text = text.replace("\r\n", "\n").replace("\r", "\n").replace("\t", " ").replace("\f", "\n")
-    text = re.sub(r"\(cid:\d+\)", "", text)          # unmapped PDF glyphs (usually bullets)
+    text = re.sub(r"\(cid:\d+\)", "", text)
     text = _CONTROL.sub("", text)
-    text = re.sub(r"([a-z])-\n([a-z])", r"\1\2", text)  # re-join hyphenated line breaks: "devel-\nopment"
+    text = re.sub(r"([a-z])-\n([a-z])", r"\1\2", text)
     text = _BULLETS.sub("", text)
-    text = re.sub(r"[  ]{5,}", "    ", text)      # keep wide gaps (column separators) but bounded
+    text = re.sub(r"[  ]{5,}", "    ", text)
     text = re.sub(r"(?<! )[  ]{2,3}(?! )", " ", text)
     text = re.sub(r"\n\s*\n+", "\n\n", text)
     return "\n".join(line.strip() for line in text.split("\n")).strip()

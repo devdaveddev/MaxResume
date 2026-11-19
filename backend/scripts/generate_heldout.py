@@ -28,9 +28,7 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate
 
 OUT = Path(__file__).resolve().parents[2] / "sample_data" / "heldout"
 
-# Ground truth: roles are (title, company, "YYYY-MM" start, "YYYY-MM" end or None for current).
 TRUTH = {
-    # ------------------------------------------------------------------ dev
     "ananya_iyer.docx": dict(group="dev", name="Ananya Iyer", email="ananya.iyer@example.com", phone="919845012345",
         location="Chennai, Tamil Nadu", roles=[("Software Engineer", "Zoho Corporation", "2021-07", None),
         ("Associate Software Engineer", "Freshworks", "2019-06", "2021-06")],
@@ -51,7 +49,6 @@ TRUTH = {
         ("Junior Developer", "XYZ Ltd", "2018-01", "2021-12")],
         education=[(2, "University of Salford", 2018)],
         skills={"Selenium", "Python", "PHP", "MySQL", "Jira", "Git"}),
-    # ------------------------------------------------------------------ held-out
     "lena_fischer.docx": dict(group="heldout", name="Lena Fischer", email="lena.fischer@example.com", phone="4930555012345",
         location="Berlin, Germany", roles=[("Lead Developer", "Initech", "2020-03", None),
         ("Software Developer", "Globex", "2016-09", "2020-02")],
@@ -147,7 +144,6 @@ def main() -> None:
         "SKILLS\nSelenium, Python, PHP, MySQL, Jira, Git\n\n"
         "EDUCATION\nBSc Computer Science, University of Salford (2018)\n")
 
-    # ---------------- held-out: written after the fixes, never used to tune the parser
     _docx(OUT / "lena_fischer.docx", [
         ("H1", "Lena Fischer"), (None, "lena.fischer@example.com · +49 30 555012345 · Berlin, Germany"),
         ("H2", "Work History"),

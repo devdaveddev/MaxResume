@@ -10,7 +10,6 @@ from __future__ import annotations
 import re
 
 HEADINGS: dict[str, list[str]] = {
-    # resume sections
     "summary": ["summary", "professional summary", "profile", "about me", "objective", "career objective",
                 "career summary", "professional profile", "overview"],
     "skills": ["skills", "technical skills", "key skills", "core skills", "core competencies", "technologies",
@@ -26,7 +25,6 @@ HEADINGS: dict[str, list[str]] = {
     "achievements": ["achievements", "awards", "honors", "accomplishments", "awards & achievements"],
     "languages": ["languages", "spoken languages"],
     "interests": ["interests", "hobbies"],
-    # job-description sections
     "jd_responsibilities": ["responsibilities", "key responsibilities", "what you will do", "what you'll do",
                             "role & responsibilities", "roles and responsibilities", "the role", "your role",
                             "job responsibilities", "duties"],
@@ -51,7 +49,6 @@ def _heading_key(line: str) -> str | None:
         return None
     if clean in _LOOKUP:
         return _LOOKUP[clean]
-    # tolerate headings like "Experience Summary" / "Skills Summary"
     for phrase, key in _LOOKUP.items():
         if clean.startswith(phrase + " ") and len(clean.split()) <= len(phrase.split()) + 1:
             return key
@@ -64,7 +61,6 @@ def split_sections(text: str) -> dict[str, str]:
     current = "header"
     for line in text.split("\n"):
         stripped = line.strip()
-        # "Skills: Java, Python" -> heading + inline content
         inline = None
         if ":" in stripped:
             head, _, rest = stripped.partition(":")
@@ -72,9 +68,6 @@ def split_sections(text: str) -> dict[str, str]:
                 inline = (_heading_key(head), rest.strip())
         if inline:
             sections.setdefault(inline[0], []).append(inline[1])
-            # Resume "Skills: Java, SQL" opens the skills section, but a JD line such as
-            # "Good to have: dbt, Snowflake" labels only itself; the lines after it belong
-            # to the section they were already in.
             if not inline[0].startswith("jd_"):
                 current = inline[0]
             continue

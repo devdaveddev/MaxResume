@@ -26,7 +26,6 @@ _MONTH = r"(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|a
 _SEASON = r"(?:spring|summer|fall|autumn|winter)"
 _YEAR = r"(?:19|20)\d{2}"
 _SHORT_YEAR = r"['’‘]\d{2}"
-# A single date: "Mar 2019", "March, 2019", "Jan '19", "Summer 2019", "03/2019", "2019-03", "2019"
 _DATE = (rf"(?:(?:{_MONTH}|{_SEASON})\s*,?\s*(?:{_YEAR}|{_SHORT_YEAR})"
          rf"|(?:0?[1-9]|1[0-2])\s*[/\-.]\s*{_YEAR}"
          rf"|{_YEAR}\s*[/\-]\s*(?:0?[1-9]|1[0-2])(?!\d)"
@@ -35,14 +34,13 @@ _PRESENT = r"(?:present|current(?:ly)?|now|till\s+date|to\s+date|ongoing|today|d
 _SEP = r"\s*(?:-|–|—|−|to|until|till|→|>)\s*"
 
 DATE_RANGE = re.compile(rf"(?P<start>{_DATE}){_SEP}(?P<end>{_DATE}|{_PRESENT})(?![\d/])", re.IGNORECASE)
-# "Since March 2022", "From 2021 (ongoing)": open-ended ranges
 OPEN_RANGE = re.compile(rf"\b(?:since|from)\s+(?P<start>{_DATE})(?!{_SEP}(?:{_DATE}|{_PRESENT}))", re.IGNORECASE)
 
 
 def _year(token: str) -> int:
     token = token.strip("'’‘")
     y = int(token)
-    if y < 100:  # '19 -> 2019, '98 -> 1998
+    if y < 100:
         y += 2000 if y <= (date.today().year % 100) + 1 else 1900
     return y
 
@@ -65,13 +63,11 @@ def parse_date(s: str, is_end: bool = False, today: date | None = None) -> date 
         return date(int(m.group(1)), int(m.group(2)), 1)
     m = re.match(rf"({_YEAR})", s)
     if m:
-        # a bare year: assume January for a start date, December for an end date
         return date(int(m.group(1)), 12 if is_end else 1, 1)
     return None
 
 
 def months_between(start: date, end: date) -> int:
-    # inclusive of the start month: "Jan 2020 – Dec 2020" = 12 months
     return max(0, (end.year - start.year) * 12 + (end.month - start.month) + 1)
 
 
@@ -99,7 +95,6 @@ def gaps(intervals: list[tuple[date, date]], min_months: int = 6) -> list[tuple[
     return out
 
 
-# "5+ years", "3-5 years", "minimum of 4 years", "at least 2 yrs", "8+ yrs"
 YEARS_PATTERN = re.compile(
     r"(?P<min>\d{1,2}(?:\.\d)?)\s*(?:\+|plus)?\s*(?:(?:-|–|to)\s*(?P<max>\d{1,2})\s*\+?\s*)?(?:years?|yrs?)",
     re.IGNORECASE,

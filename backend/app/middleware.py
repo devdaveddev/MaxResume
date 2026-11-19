@@ -31,12 +31,12 @@ _BASE_HEADERS = [
 def security_headers(path: str) -> list[tuple[bytes, bytes]]:
     headers = list(_BASE_HEADERS)
     ancestors = get_settings().frame_ancestors.strip()
-    if ancestors:  # e.g. hosted inside the Hugging Face Spaces page
+    if ancestors:
         headers.append((b"content-security-policy", f"frame-ancestors 'self' {ancestors}".encode()))
     else:
         headers.append((b"x-frame-options", b"DENY"))
     if path.startswith("/api"):
-        headers.append((b"cache-control", b"no-store"))  # API responses may contain personal data
+        headers.append((b"cache-control", b"no-store"))
     return headers
 
 
@@ -58,7 +58,7 @@ class RequestContextMiddleware:
         if keys:
             actor = keys.get(headers.get("x-api-key", ""))
         else:
-            actor = "local-user"  # auth disabled: single-user local deployment
+            actor = "local-user"
         actor_token = actor_var.set(actor or "unauthenticated")
 
         start = time.perf_counter()

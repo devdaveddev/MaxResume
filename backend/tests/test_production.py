@@ -16,7 +16,6 @@ JD = ("Backend Engineer\nRequirements\n3+ years of experience with Java and Spri
       "Experience with PostgreSQL and Docker.\n")
 
 
-# ---------------------------------------------------------------- audit chain
 def test_audit_chain_detects_tampering():
     async def run():
         s = MemoryStore()
@@ -25,13 +24,11 @@ def test_audit_chain_detects_tampering():
             await a.record("job.created", target_id=f"j{i}", details={"i": i})
         assert (await a.verify())["ok"]
 
-        # modify an entry's details in place
         e = (await s.find("audit_log", {"seq": 3}))[0]
         s._c["audit_log"][e["_id"]]["details"] = {"i": 999}
         bad = await a.verify()
         assert not bad["ok"] and bad["broken_at_seq"] == 3
 
-        # restore, then delete an entry
         s._c["audit_log"][e["_id"]]["details"] = {"i": 2}
         assert (await a.verify())["ok"]
         del s._c["audit_log"][e["_id"]]
@@ -76,10 +73,9 @@ def test_api_actions_are_audited_and_chain_verifies(samples):
         assert v["ok"] and v["entries"] >= len(log)
 
 
-# ---------------------------------------------------------------- logging
 def test_pii_is_redacted_in_logs():
     assert redact("mail jane.doe@acme.com or call +91 98765 43210") == "mail j***@*** or call ***10"
-    assert redact("parsed 2026-11-16 in 340 ms") == "parsed 2026-11-16 in 340 ms"  # dates/numbers untouched
+    assert redact("parsed 2026-11-16 in 340 ms") == "parsed 2026-11-16 in 340 ms"
     rec = logging.makeLogRecord({"msg": "candidate %s", "args": ("bob@x.io",), "levelno": 20})
     rec.upload = "call 415 555 0132"
     ContextFilter().filter(rec)
@@ -95,19 +91,17 @@ def test_request_id_is_generated_and_propagated():
         assert r.headers["x-content-type-options"] == "nosniff"
 
 
-# ---------------------------------------------------------------- auth
 def test_api_key_auth(monkeypatch):
     monkeypatch.setattr(get_settings(), "api_keys", "alice:k-alice-123")
     with TestClient(app) as c:
         assert c.get("/api/jobs").status_code == 401
-        assert c.get("/api/health").status_code == 200  # liveness stays public
+        assert c.get("/api/health").status_code == 200
         assert c.get("/api/jobs", headers={"X-API-Key": "k-alice-123"}).status_code == 200
         job = c.post("/api/jobs", data={"text": JD}, headers={"X-API-Key": "k-alice-123"}).json()
         log = c.get("/api/audit", params={"job_id": job["id"]}, headers={"X-API-Key": "k-alice-123"}).json()
         assert log[0]["actor"] == "alice"
 
 
-# ---------------------------------------------------------------- errors & input safety
 def test_consistent_error_shape():
     with TestClient(app) as c:
         r = c.get("/api/jobs/does-not-exist")

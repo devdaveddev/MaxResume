@@ -45,7 +45,7 @@ class AuditLog:
     def __init__(self, store) -> None:
         self.store = store
         self._lock = asyncio.Lock()
-        self._head: tuple[int, str] | None = None  # (seq, hash) of the latest entry
+        self._head: tuple[int, str] | None = None
 
     async def _load_head(self) -> tuple[int, str]:
         last = await self.store.find("audit_log", {}, {"seq": 1, "hash": 1}, sort=[("seq", -1)], limit=1)
@@ -77,7 +77,7 @@ class AuditLog:
                 try:
                     await self.store.insert("audit_log", entry)
                 except DuplicateKey:
-                    continue  # another writer took this seq; reload head and retry
+                    continue
                 self._head = (entry["seq"], entry["hash"])
                 log.info("audit %s", action, extra={"audit_action": action, "audit_seq": entry["seq"],
                                                     "target_type": target_type, "target_id": target_id,
