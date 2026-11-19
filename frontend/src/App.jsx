@@ -13,6 +13,13 @@ import { useToast } from './components/toast'
 // The current job id lives in the URL hash (#/job/<id>) so a refresh keeps your place.
 const jobIdFromHash = () => (window.location.hash.match(/^#\/job\/(\w+)/) || [])[1] || null
 
+function scrollToStart() {
+  setTimeout(() => {
+    document.getElementById('start')?.scrollIntoView({ behavior: 'smooth' })
+    setTimeout(() => document.querySelector('.job-form textarea')?.focus({ preventScroll: true }), 400)
+  }, 50)
+}
+
 export default function App() {
   const [health, setHealth] = useState(null)
   const [jobs, setJobs] = useState([])
@@ -37,6 +44,10 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash)
   }, [refreshJobs])
 
+  useEffect(() => {
+    if (!jobId && window.location.hash === '#start') scrollToStart()
+  }, [jobId])
+
   const loadRows = useCallback((id) => api.candidates(id).then(setRows), [])
 
   useEffect(() => {
@@ -47,6 +58,12 @@ export default function App() {
   }, [jobId, loadRows, notify])
 
   const openJob = (id) => { window.location.hash = id ? `#/job/${id}` : '' }
+
+  // "New job" in the navbar: go to the job-description form from any page and focus it.
+  const goToStart = () => {
+    if (window.location.hash === '#start') scrollToStart()
+    else window.location.hash = '#start'
+  }
 
   async function saveRequirements(edits) {
     try {
@@ -101,7 +118,7 @@ export default function App() {
               {jobs.map((j) => <option key={j.id} value={j.id}>{j.title} ({j.candidate_count})</option>)}
             </select>
           )}
-          <button className="btn btn-primary btn-sm" onClick={() => openJob(null)}><Plus size={14} /> New job</button>
+          <button className="btn btn-primary btn-sm" onClick={goToStart}><Plus size={14} /> New job</button>
           {health && (
             <span className={`health ${health.status === 'ok' ? 'up' : 'down'}`}
                   title={health.status === 'ok' ? `Storage: ${health.storage} · Model: ${health.embedding_model}` : 'Backend not reachable'}>

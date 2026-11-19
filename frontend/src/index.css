@@ -548,13 +548,11 @@ button.fc-btn:hover { background: var(--ink-hover); }
   .topbar { padding: 10px 14px; }
   .hero-eyebrow { font-size: 17px; }
   .hero-lead { font-size: 17px; }
-  .hero-art { height: 470px; }
-  .card-jd { width: 250px; }
-  .card-rank { width: 280px; top: 175px; }
-  .card-upload { left: 0; width: 260px; }
-  .card-rank { right: 0; max-width: calc(100% - 10px); }
-  .glow-a { width: 300px; height: 300px; right: 0; }
-  .glow-b { width: 260px; height: 260px; }
+  /* phones: stack the hero cards in a column instead of overlapping them */
+  .hero-art { height: auto; display: flex; flex-direction: column; gap: 14px; }
+  .hero-art .float-card { position: static; width: 100%; max-width: 100%; animation: none; }
+  .glow-a { width: 260px; height: 260px; right: 0; top: 0; }
+  .glow-b { width: 220px; height: 220px; bottom: 0; left: 0; }
   .how-steps { grid-template-columns: 1fr; }
   .job-title-row h1 { font-size: 32px; }
   .btn-xl { width: 100%; justify-content: center; }
