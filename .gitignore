@@ -19,3 +19,6 @@ frontend/dist/
 
 # Local editor workspace (references ../derive)
 *.code-workspace
+
+# Local assistant/tool settings
+.claude/
