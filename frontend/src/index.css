@@ -107,6 +107,15 @@ main { max-width: 1320px; margin: 0 auto; padding: 24px; display: flex; flex-dir
 .field em { font-weight: 400; color: var(--muted); font-style: normal; }
 .or-row { display: flex; align-items: center; gap: 12px; color: var(--muted); flex-wrap: wrap; }
 .file-picked { display: inline-flex; gap: 8px; color: var(--text); font-weight: 600; }
+.or-divider { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; margin: 2px 0 10px; }
+.or-divider::before, .or-divider::after { content: ""; flex: 1; border-top: 1px solid var(--border); }
+.job-form .dropzone { margin-bottom: 16px; }
+.jd-file {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 10px 12px; border-radius: var(--radius);
+  border: 1px solid var(--primary); background: var(--primary-soft); color: var(--primary); min-width: 0;
+}
+.jd-file .fname { color: var(--text); font-weight: 600; }
+.jd-dragging textarea { outline: 2px dashed var(--primary); outline-offset: 2px; }
 
 /* ---------- chips ---------- */
 .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }

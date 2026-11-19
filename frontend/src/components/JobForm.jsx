@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { FileText, Upload, Sparkles, Wand2 } from 'lucide-react'
+import { FileText, UploadCloud, Sparkles, Wand2, X } from 'lucide-react'
 import { api, samples } from '../api'
 import { Card, Spinner } from './ui'
 import { useToast } from './toast'
@@ -12,8 +12,31 @@ export default function JobForm({ onCreated, pendingCount = 0 }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [sampleJds, setSampleJds] = useState([])
+  const [drag, setDrag] = useState(false)
   const fileInput = useRef(null)
+  const dragDepth = useRef(0) // dragenter/leave fire for every child element; count them so the highlight doesn't flicker
   const notify = useToast()
+
+  const JD_TYPES = ['pdf', 'docx', 'txt']
+  function pickFile(f) {
+    if (!f) return
+    const ext = f.name.split('.').pop().toLowerCase()
+    if (!JD_TYPES.includes(ext)) { setError(`“${f.name}” isn't a PDF, DOCX or TXT file.`); return }
+    setError(''); setFile(f)
+  }
+
+  // Drops anywhere on the card are caught, so a file dropped on the textarea doesn't open in the browser tab.
+  const dropHandlers = {
+    onDragEnter: (e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); dragDepth.current += 1; setDrag(true) } },
+    onDragOver: (e) => { if (e.dataTransfer.types.includes('Files')) e.preventDefault() },
+    onDragLeave: () => { dragDepth.current = Math.max(0, dragDepth.current - 1); if (!dragDepth.current) setDrag(false) },
+    onDrop: (e) => {
+      if (!e.dataTransfer.files.length) return
+      e.preventDefault(); dragDepth.current = 0; setDrag(false)
+      if (e.dataTransfer.files.length > 1) notify('One job description at a time, so the first file was used', 'error')
+      pickFile(e.dataTransfer.files[0])
+    },
+  }
 
   useEffect(() => { samples.list().then((s) => setSampleJds(s.job_descriptions)).catch(() => {}) }, [])
 
@@ -49,7 +72,7 @@ export default function JobForm({ onCreated, pendingCount = 0 }) {
           ))}
         </div>
       )}
-      <form onSubmit={submit}>
+      <form onSubmit={submit} {...dropHandlers} className={drag ? 'jd-dragging' : ''}>
         <label className="field">
           <span>Job title <em>(optional, detected automatically)</em></span>
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Senior Java Backend Engineer" />
@@ -66,23 +89,27 @@ export default function JobForm({ onCreated, pendingCount = 0 }) {
           />
         </label>
 
-        <div className="or-row">
-          <span>or</span>
-          <button type="button" className="btn btn-ghost" onClick={() => fileInput.current.click()}>
-            <Upload size={16} /> Upload a JD file
-          </button>
-          <span className="muted small">PDF, DOCX or TXT</span>
-          <input
-            ref={fileInput} type="file" accept=".pdf,.docx,.txt" hidden
-            onChange={(e) => { setFile(e.target.files[0] || null); e.target.value = '' }}
-          />
-          {file && (
-            <span className="file-picked">
-              {file.name}
-              <button type="button" className="link" onClick={() => setFile(null)}>remove</button>
-            </span>
-          )}
-        </div>
+        <div className="or-divider"><span>or upload a file</span></div>
+        {file ? (
+          <div className="jd-file">
+            <FileText size={18} />
+            <span className="fname">{file.name}</span>
+            <span className="muted small">{file.size < 1024 ? "<1" : (file.size / 1024).toFixed(0)} KB</span>
+            <button type="button" className="icon-btn" onClick={() => setFile(null)} aria-label="Remove file"><X size={16} /></button>
+          </div>
+        ) : (
+          <div className={`dropzone compact ${drag ? 'drag' : ''}`} role="button" tabIndex={0}
+               onClick={() => fileInput.current.click()}
+               onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), fileInput.current.click())}>
+            <UploadCloud size={22} />
+            <p><strong>Drag &amp; drop a JD file here</strong> or <span className="linkish">browse files</span></p>
+            <p className="muted small">PDF, DOCX or TXT</p>
+          </div>
+        )}
+        <input
+          ref={fileInput} type="file" accept=".pdf,.docx,.txt" hidden
+          onChange={(e) => { pickFile(e.target.files[0]); e.target.value = '' }}
+        />
 
         {error && <p className="error">{error}</p>}
 
