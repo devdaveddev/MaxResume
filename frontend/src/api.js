@@ -66,7 +66,12 @@ export const samples = {
 // Downloads go through fetch (not a plain <a href>) so the API key header is sent when auth is on.
 export async function download(url, { open = false } = {}) {
   const res = await fetch(url, withAuth())
-  if (!res.ok) throw new Error(`Download failed (${res.status})`)
+  if (!res.ok) {
+    let msg = `Download failed (${res.status})`
+    try { msg = (await res.json()).error?.message || msg } catch { /* non-JSON error */ }
+    if (res.status === 404) msg = 'This job is no longer on the server (the free demo resets when idle). Create it again and re-upload the resumes.'
+    throw new Error(msg)
+  }
   const blob = await res.blob()
   const objectUrl = URL.createObjectURL(blob)
   const name = (res.headers.get('content-disposition') || '').match(/filename="([^"]+)"/)?.[1] || 'download'
@@ -79,4 +84,5 @@ export async function download(url, { open = false } = {}) {
     a.remove()
   }
   setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
+  return name
 }

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Trophy, Download, Search, ArrowUpDown, Trash2, ChevronRight, Medal, ScanSearch } from 'lucide-react'
 import { api, download } from '../api'
-import { Avatar, Card, Chip, Help, ScoreBar, Verdict, fmtYears } from './ui'
+import { Avatar, Card, Chip, Help, ScoreBar, Spinner, Verdict, fmtYears } from './ui'
+import { useToast } from './toast'
 
 const VERDICTS = ['All', 'Strong match', 'Good match', 'Partial match', 'Weak match']
 const MAX_CHIPS = 4
@@ -13,6 +14,20 @@ export default function RankingTable({ jobId, rows, selectedId, onSelect, onDele
   const [verdict, setVerdict] = useState('All')
   const [sort, setSort] = useState({ key: 'score', dir: -1 })
   const [confirmId, setConfirmId] = useState(null)
+  const [exporting, setExporting] = useState(false)
+  const notify = useToast()
+
+  async function exportCsv() {
+    setExporting(true)
+    try {
+      const name = await download(api.exportUrl(jobId))
+      notify(`Downloaded ${name} (${rows.length} candidate${rows.length === 1 ? '' : 's'})`)
+    } catch (e) {
+      notify(e.message, 'error')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const view = useMemo(() => {
     const needle = q.trim().toLowerCase()
@@ -45,7 +60,9 @@ export default function RankingTable({ jobId, rows, selectedId, onSelect, onDele
     <Card
       title="Candidate ranking" icon={<Trophy size={18} />}
       actions={rows.length > 0 && (
-        <button className="btn btn-ghost btn-sm" onClick={() => download(api.exportUrl(jobId))}><Download size={14} /> Export CSV</button>
+        <button className="btn btn-ghost btn-sm" onClick={exportCsv} disabled={exporting}>
+          {exporting ? <Spinner label="Exporting…" /> : <><Download size={14} /> Export CSV</>}
+        </button>
       )}
     >
       {rows.length === 0 ? (

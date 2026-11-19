@@ -5,6 +5,7 @@ import {
   ScanSearch, ShieldCheck,
 } from 'lucide-react'
 import { api, download } from '../api'
+import { useToast } from './toast'
 import { Avatar, Chip, Help, ScoreRing, Spinner, Verdict, fmtYears, scoreColor } from './ui'
 
 const REASON_ICON = {
@@ -130,6 +131,7 @@ export default function CandidatePanel({ id, ids, onNavigate, onClose }) {
 }
 
 function PanelBody({ c, tab, setTab }) {
+  const notify = useToast()
   const p = c.profile
   const m = c.match
   const sk = m.skills
@@ -309,7 +311,7 @@ function PanelBody({ c, tab, setTab }) {
       {tab === 'Profile' && (
         <>
           <Section icon={<Award size={16} />} title="Extracted from the resume"
-                   aside={<button className="btn btn-ghost btn-sm" onClick={() => download(api.fileUrl(c.id), { open: true })}>
+                   aside={<button className="btn btn-ghost btn-sm" onClick={() => download(api.fileUrl(c.id), { open: true }).catch((e) => notify(e.message, 'error'))}>
                      <FileDown size={14} /> Open original {c.file_type.toUpperCase()}</button>}>
             {p.summary && <p className="summary">“{p.summary}”</p>}
             <dl className="facts">

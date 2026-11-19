@@ -393,6 +393,7 @@ async def export_csv(job_id: str):
     job = await _job_or_404(job_id)
     rows = await list_candidates(job_id)
     buf = io.StringIO()
+    buf.write("\ufeff")  # UTF-8 byte-order mark: Excel otherwise mis-reads non-ASCII names and skills
     w = csv.writer(buf)
     w.writerow(["Rank", "Candidate", "Email", "Experience (yrs)", "Relevant (yrs)", "Match %", "Verdict",
                 "Matched skills", "Missing skills", "Parse confidence", "File"])
@@ -403,7 +404,7 @@ async def export_csv(job_id: str):
     await audit().record("ranking.exported", target_type="job", target_id=job_id, job_id=job_id,
                          details={"format": "csv", "rows": len(rows)})
     fname = re.sub(r"[^A-Za-z0-9]+", "_", job["title"])[:40].strip("_") or "ranking"
-    return StreamingResponse(iter([buf.getvalue()]), media_type="text/csv",
+    return StreamingResponse(iter([buf.getvalue()]), media_type="text/csv; charset=utf-8",
                              headers={"Content-Disposition": f'attachment; filename="{fname}_ranking.csv"'})
 
 
